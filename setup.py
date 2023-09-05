@@ -55,6 +55,7 @@ setup(
         "torchvision",
         "tqdm",
         "torchio",
+        "scikit-image"
     ],
     cmdclass=cmdclass,
 )
