@@ -6,7 +6,8 @@ COPY . /tmp
 
 COPY requirements.txt /tmp
 
-RUN pip install /tmp && rm -rf /tmp
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
 
 EXPOSE 80
 
