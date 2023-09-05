@@ -6,7 +6,7 @@ COPY . /tmp
 
 COPY requirements.txt /tmp
 
-RUN pip install /tmp/haca3 && rm -rf /tmp/haca3
+RUN pip install /tmp && rm -rf /tmp
 
 EXPOSE 80
 
