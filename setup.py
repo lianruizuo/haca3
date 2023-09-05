@@ -51,7 +51,7 @@ setup(
         "nibabel",
         "numpy",
         "scipy",
-        "torch=3.8",
+        "torch>=3.8",
         "torchvision"
         "tqdm",
         "torchio",
