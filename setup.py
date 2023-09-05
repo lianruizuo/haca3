@@ -52,7 +52,7 @@ setup(
         "numpy",
         "scipy",
         "torch",
-        "torchvision"
+        "torchvision",
         "tqdm",
         "torchio",
     ],
