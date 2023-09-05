@@ -6,11 +6,7 @@ COPY . /tmp
 
 COPY requirements.txt /tmp
 
-RUN apt-get update && apt-get install -y build-essential
-
-RUN pip install --upgrade setuptools wheel
-
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install /tmp/haca3 && rm -rf /tmp/haca3
 
 EXPOSE 80
 
