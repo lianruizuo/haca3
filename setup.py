@@ -23,12 +23,13 @@ __version__, cmdclass = get_version_and_cmdclass(__package_name__)
 # noinspection PyTypeChecker
 setup(
     name=__package_name__,
-    version=__version__,
+    # version=__version__,
+    version='0.0.1'
     description="HACA3: A unified approach for multi-site MR image harmonization",
     long_description="HACA3: A unified approach for multi-site MR image harmonization",
     author="Lianrui Zuo",
     author_email="lr_zuo@jhu.edu",
-    url="https://gitlab.com/iacl/haca3",
+    url="https://gitlab.com/lr_zuo/haca3",
     license="Apache License, 2.0",
     classifiers=[
         "Development Status :: 3 - Alpha",
