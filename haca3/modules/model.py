@@ -22,7 +22,7 @@ class HACA3:
         self.beta_dim = beta_dim
         self.theta_dim = theta_dim
         self.eta_dim = eta_dim
-        self.device = torch.device("cuda:0" if gpu == 0 else "cuda:1")
+        self.device = torch.device(f"cuda:{gpu}")
 
         # define networks
         self.beta_encoder = UNet(in_ch=1, out_ch=self.beta_dim, base_ch=4, final_act='noact')
