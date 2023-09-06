@@ -3,7 +3,7 @@ import argparse
 import torch
 import nibabel as nib
 import numpy as np
-from torchvision.transforms import ToTensor, CencerCrop, Compose, ToPILImage
+from torchvision.transforms import ToTensor, CenterCrop, Compose, ToPILImage
 from .modules.model import HACA3
 
 
