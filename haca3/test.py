@@ -116,9 +116,5 @@ def main(args=None):
                     save_intermediate=args.save_intermediate,
                     norm_val=norm_vals)
 
-    
-if __name__ == '__main__':
-    main()
-
 
 
