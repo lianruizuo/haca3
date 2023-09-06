@@ -1,8 +1,7 @@
 import sys
 import argparse
 import torch
-import nibablel as nib
-import os
+import nibabel as nib
 import numpy as np
 from torchvision.transforms import ToTensor, CencerCrop, Compose, ToPILImage
 from .modules.model import HACA3
