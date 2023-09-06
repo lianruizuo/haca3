@@ -478,8 +478,8 @@ class HACA3:
                                              f'epoch{str(epoch).zfill(3)}_batch{str(batch_id).zfill(4)}.pt')
                     self.save_model(file_name, epoch)
 
-    def harmonization(self, source_imgs, target_imgs, target_contrasts, contrast_dropout, out_dir, prefix,
-                      recon_orientation, header, affine, num_batches=4, save_intermediate=False, norm_val=1000.0):
+    def harmonize(self, source_images, target_images, target_theta, target_eta, target_contrasts, contrast_dropout, out_dir, file_name,
+                  recon_orientation, header, affine, num_batches=4, save_intermediate=False, norm_val=1000.0):
         """
         Harmonize source images to target images.
         :param num_batches:
@@ -495,6 +495,7 @@ class HACA3:
         """
         contrast_names = ['T1', 'T2', 'PD', 'FLAIR']
         mkdir_p(out_dir)
+        prefix = file_name.replace('.nii.gz','')
         with torch.set_grad_enabled(False):
             self.beta_encoder.eval()
             self.theta_encoder.eval()
@@ -502,7 +503,7 @@ class HACA3:
             self.decoder.eval()
             # 1. calculate beta, theta, eta from source images
             logits, betas, keys, masks = [], [], [], []
-            for source_img in source_imgs:
+            for source_img in source_images:
                 source_img = source_img.unsqueeze(1)
                 source_img_batches = divide_into_batches(source_img, num_batches)
                 mask_tmp, logit_tmp, beta_tmp, key_tmp = [], [], [], []
@@ -528,7 +529,7 @@ class HACA3:
 
             # 2. calculate theta, eta for target images
             queries, thetas_target, etas_target = [], [], []
-            for target_img in target_imgs:
+            for target_img in target_images:
                 target_img = target_img.to(self.device).unsqueeze(1)  # (num_slices, 1, 288, 288)
                 theta_target, _ = self.theta_encoder(target_img)
                 theta_target = theta_target.mean(dim=0, keepdim=True)
