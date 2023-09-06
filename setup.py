@@ -44,7 +44,6 @@ setup(
         "console_scripts": [
             "haca3-train=haca3.train:main",
             "haca3-test=haca3.test:main",
-            "run-haca3=haca3.main:main",
         ]
     },
     install_requires=[
