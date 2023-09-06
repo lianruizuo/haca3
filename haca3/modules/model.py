@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
 from tqdm import tqdm
 import numpy as np
@@ -17,6 +15,7 @@ from .dataset import HACA3Dataset
 from .network import UNet, ThetaEncoder, EtaEncoder, Vgg16, AttentionModule, Patchifier, Discriminator, FusionNet
 from .utils import mkdir_p, PatchNCELoss, KLDivergenceLoss, reparameterize_logit, dropout_contrasts, apply_beta_mask, \
     selecting_available_contrasts, divide_into_batches
+
 
 class HACA3:
     def __init__(self, beta_dim, theta_dim, eta_dim, pretrained_harmonization=None, pretrained_eta_encoder=None,
@@ -226,7 +225,7 @@ class HACA3:
         eta_loss = self.l1_loss(eta_rec, eta_ref).mean()
         beta_loss = self.l1_loss(beta_rec, beta_ref).mean()
 
-        cycle_loss = theta_loss + eta_loss + 8e-2*beta_loss
+        cycle_loss = theta_loss + eta_loss + 8e-2 * beta_loss
         if is_train:
             self.optim_beta_encoder.zero_grad()
             self.optim_theta_encoder.zero_grad()
@@ -267,7 +266,7 @@ class HACA3:
         nce_loss = 0.0
 
         # 1. reconstruction loss and perceptual loss
-        rec_loss = self.l1_loss(rec_img, ref_img).mean() 
+        rec_loss = self.l1_loss(rec_img, ref_img).mean()
         rec_features = self.vgg(rec_img.repeat(1, 3, 1, 1))
         ref_features = self.vgg(ref_img.repeat(1, 3, 1, 1))
         per_loss = self.l1_loss(rec_features, ref_features).mean()
@@ -378,12 +377,13 @@ class HACA3:
                 reference_imgs = [img_dict['img'] for img_dict in img_dicts]
                 available_contrast_label = torch.stack([img_dict['exists'] for img_dict in img_dicts],
                                                        dim=-1)  # (batch_size, num_contrasts)
-                target_img_selected, reference_img_selected, selected_contrast_ids = selecting_available_contrasts(target_imgs, reference_imgs, available_contrast_label)
+                target_img_selected, reference_img_selected, selected_contrast_ids = selecting_available_contrasts(
+                    target_imgs, reference_imgs, available_contrast_label)
                 target_img_selected = target_img_selected.to(self.device)
                 reference_img_selected = reference_img_selected.to(self.device)
                 batch_size = source_imgs[0].shape[0]
-                #print(target_img_selected.shape, reference_img_selected.shape)
-                
+                # print(target_img_selected.shape, reference_img_selected.shape)
+
                 num_contrasts = len(source_imgs)
                 # 1. intra-site image-to-image translation
                 logits, betas = self.cal_beta(source_imgs)
@@ -427,7 +427,8 @@ class HACA3:
                     eta_target = self.cal_eta(target_img_shuffled)
                     query = torch.cat([theta_target, eta_target], dim=1)
                     keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
-                    rec_img, attn, beta_fusion = self.decode(logits, theta_target, query, keys, available_contrast_label,
+                    rec_img, attn, beta_fusion = self.decode(logits, theta_target, query, keys,
+                                                             available_contrast_label,
                                                              contrast_dropout=False)
                     theta_recon, _ = self.theta_encoder(rec_img)
                     eta_recon = self.eta_encoder(rec_img)
@@ -565,12 +566,13 @@ class HACA3:
                     logits_tmp = [divide_into_batches(ls, num_batches)[batch_id] for ls in logits]
                     curr_batch_size = keys_tmp[0].shape[0]
                     curr_query = query.view(1, self.theta_dim + self.eta_dim, 1).repeat(curr_batch_size, 1, 1)
-                    k = torch.cat(keys_tmp, dim=-1).view(curr_batch_size, self.theta_dim+self.eta_dim, 1, 4)
-                    v = torch.stack(logits_tmp, dim=-1).view(curr_batch_size, self.beta_dim, 224*224, 4)
+                    k = torch.cat(keys_tmp, dim=-1).view(curr_batch_size, self.theta_dim + self.eta_dim, 1, 4)
+                    v = torch.stack(logits_tmp, dim=-1).view(curr_batch_size, self.beta_dim, 224 * 224, 4)
                     logit_fusion_tmp, attn_tmp = self.attn_module(curr_query, k, v, contrast_dropout.to(self.device))
                     beta_fusion_tmp = self.channel_aggregation(reparameterize_logit(logit_fusion_tmp))
                     beta_fusion_tmp = ((beta_fusion_tmp * (logits_tmp[0][:, [0], ...] != 0)) * 1.0)
-                    combined_map = torch.cat([beta_fusion_tmp, theta_target.repeat(curr_batch_size, 1, 224, 224)], dim=1)
+                    combined_map = torch.cat([beta_fusion_tmp, theta_target.repeat(curr_batch_size, 1, 224, 224)],
+                                             dim=1)
                     rec_img_tmp = self.decoder(combined_map)
                     rec_img.append(rec_img_tmp)
                     beta_fusion.append(beta_fusion_tmp)
@@ -611,7 +613,7 @@ class HACA3:
                 file_name = os.path.join(out_dir,
                                          f'{prefix}_harmonized_to_{target_contrast}_{recon_orientation}.nii.gz')
                 nib.save(img_save, file_name)
-                 
+
     def encode(self, img, out_dir, prefix, affine, header):
         """
         Learn anatomy, artifact, and contrast representations using HACA3.
@@ -655,7 +657,8 @@ class HACA3:
         nib.save(img_save, file_name)
         # 3b. beta images
         beta = beta.squeeze().permute(1, 2, 0).permute(1, 0, 2)
-        img_save = nib.Nifti1Image(np.array(beta)[144 - 120:144 + 121, 144 - 143:144 + 143, 144 - 120:144 + 121], affine, header)
+        img_save = nib.Nifti1Image(np.array(beta)[144 - 120:144 + 121, 144 - 143:144 + 143, 144 - 120:144 + 121],
+                                   affine, header)
         file_name = os.path.join(out_dir, f'{prefix}_beta_axial.nii.gz')
         nib.save(img_save, file_name)
         # 3c. theta
@@ -666,21 +669,21 @@ class HACA3:
         file_name = os.path.join(out_dir, f'{prefix}_eta.txt')
         eta_save = eta[0, :, 0, 0].cpu().numpy()
         np.savetxt(file_name, np.expand_dims(eta_save, axis=0), delimiter=",", fmt="%5f")
-        
+
     def normalize_intensity(self, image):
         p99 = np.percentile(image.flatten(), 99)
         image = np.clip(image, a_min=0.0, a_max=p99)
         image = image / p99
         return image, p99
-        
+
     def combine_images(self, img_dirs, out_dir, prefix, target_contrast, pretrained_fusion=None):
         # obtain images
         imgs = []
         for img_dir in img_dirs:
-            img_pad = torch.zeros((224,224,224))
+            img_pad = torch.zeros((224, 224, 224))
             img_file = nib.load(img_dir)
             img_vol, norm_val = self.normalize_intensity(torch.from_numpy(img_file.get_fdata().astype(np.float32)))
-            img_pad[112-96:112+96, :, 112-96:112+96] = img_vol
+            img_pad[112 - 96:112 + 96, :, 112 - 96:112 + 96] = img_vol
             img_hdr = img_file.header
             img_affine = img_file.affine
             imgs.append(img_pad.numpy())
@@ -689,16 +692,17 @@ class HACA3:
             self.fusion_net = FusionNet(in_ch=3, out_ch=1)
             self.fusion_net.load_state_dict(self.checkpoint['fusion_net'])
             self.fusion_net.to(self.device)
-            img = torch.cat([ToTensor()(im).permute(2,1,0).permute(2,0,1).unsqueeze(0).unsqueeze(0) for im in imgs], dim=1)
+            img = torch.cat([ToTensor()(im).permute(2, 1, 0).permute(2, 0, 1).unsqueeze(0).unsqueeze(0) for im in imgs],
+                            dim=1)
             img = img.to(self.device)
-            img_fusion = self.fusion_net(img).squeeze().detach().permute(1,2,0).permute(1,0,2).cpu().numpy()
+            img_fusion = self.fusion_net(img).squeeze().detach().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
         else:
             # calculate median
-            img_cat = np.stack(imgs, axis=-1) 
+            img_cat = np.stack(imgs, axis=-1)
             img_fusion = np.median(img_cat, axis=-1)
-            
+
         # save fusion_image
-        img_save = img_fusion[112-96:112+96, :, 112-96:112+96] * norm_val
+        img_save = img_fusion[112 - 96:112 + 96, :, 112 - 96:112 + 96] * norm_val
         img_save = nib.Nifti1Image(img_save, img_affine, img_hdr)
         file_name = os.path.join(out_dir, f'{prefix}_harmonized_to_{target_contrast}_fusion.nii.gz')
         nib.save(img_save, file_name)

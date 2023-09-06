@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import sys
 import argparse
+import sys
 from modules.model import HACA3
+
 
 def main(args=None):
     args = sys.argv[1:] if args is None else args
@@ -20,8 +19,11 @@ def main(args=None):
     parser.add_argument('--gpu', type=int, default=0)
     args = parser.parse_args(args)
 
-    # INITIALIZE MODEL TRAINING
-    trainer = HACA3(
+    text_div = "=" * 10
+    print(f"{text_div} BEGIN TRAINING {text_div}")
+
+    # ==== INITIALIZE MODEL TRAINING ====
+    haca3 = HACA3(
         beta_dim=5,
         theta_dim=2,
         eta_dim=2,
@@ -30,17 +32,18 @@ def main(args=None):
         gpu=args.gpu
     )
 
-    trainer.load_dataset(
+    # ==== LOAD DATASETS ====
+    haca3.load_dataset(
         dataset_dirs=args.dataset_dirs,
         contrasts=args.contrasts,
         orientations=args.orientations,
         batch_size=args.batch_size
     )
 
-    trainer.initialize_training(out_dir=args.out_dir, lr=args.lr)
+    haca3.initialize_training(out_dir=args.out_dir, lr=args.lr)
 
-    # START TRAINING
-    trainer.train_harmonization(epochs=args.epochs)
+    # ==== START TRAINING ====
+    haca3.train_harmonization(epochs=args.epochs)
 
 
 if __name__ == '__main__':
