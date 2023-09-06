@@ -3,6 +3,7 @@ import argparse
 import torch
 import nibabel as nib
 import numpy as np
+import os
 from torchvision.transforms import ToTensor, CenterCrop, Compose, ToPILImage
 from .modules.model import HACA3
 
@@ -117,3 +118,46 @@ def main(args=None):
                     num_batches=args.num_batches,
                     save_intermediate=args.save_intermediate,
                     norm_val=norm_vals)
+
+    # Coronal
+    haca3.harmonize(source_images=[image.permute(0, 2, 1).flip(1) for image in source_images],
+                    target_images=target_images,
+                    target_theta=torch.from_numpy(target_theta),
+                    target_eta=torch.from_numpy(target_eta),
+                    target_contrasts=target_contrasts,
+                    contrast_dropout=torch.from_numpy(contrast_dropout),
+                    out_dir=args.out_dir,
+                    file_name=args.file_name,
+                    recon_orientation='axial',
+                    affine=image_affine,
+                    header=image_header,
+                    num_batches=args.num_batches,
+                    save_intermediate=args.save_intermediate,
+                    norm_val=norm_vals)
+
+    # Sagittal
+    haca3.harmonize(source_images=[image.permute(1, 2, 0).flip(1) for image in source_images],
+                    target_images=target_images,
+                    target_theta=torch.from_numpy(target_theta),
+                    target_eta=torch.from_numpy(target_eta),
+                    target_contrasts=target_contrasts,
+                    contrast_dropout=torch.from_numpy(contrast_dropout),
+                    out_dir=args.out_dir,
+                    file_name=args.file_name,
+                    recon_orientation='axial',
+                    affine=image_affine,
+                    header=image_header,
+                    num_batches=args.num_batches,
+                    save_intermediate=args.save_intermediate,
+                    norm_val=norm_vals)
+
+    print(f'{text_div} START FUSION {text_div}')
+    prefix = args.file_name.replace(".nii.gz", "")
+    for target_contrast in target_contrasts:
+        orientations = ['axial', 'coronal', 'sagittal']
+        decode_img_dirs = []
+        for orientation in orientations:
+            decode_img_dirs.append(os.path.join(args.out_dir,
+                                                f'{prefix}_harmonized_to_{target_contrast}_{orientation}.nii.gz'))
+        haca3.combine_images(decode_img_dirs, args.out_dir, prefix, target_contrast,
+                             args.pretrained_fusion)
