@@ -5,7 +5,7 @@ import nibablel as nib
 import os
 import numpy as np
 from torchvision.transforms import ToTensor, CencerCrop, Compose, ToPILImage
-from modules.model import HACA3
+from .modules.model import HACA3
 
 
 def normalize_intensity(image):
