@@ -3,7 +3,7 @@ import argparse
 import torch
 import nibabel as nib
 import numpy as np
-from torchvision.transforms import ToTensor, CencerCrop, Compose, ToPILImage
+from torchvision.transforms import ToTensor, CenterCrop, Compose, ToPILImage
 from .modules.model import HACA3
 
 
@@ -58,6 +58,7 @@ def main(args=None):
     parser.add_argument('--gpu-id', type=int, default=0)
     parser.add_argument('--num-batches', type=int, default=4)
     parser.add_argument('--save-intermediate', action='store_true', default=False)
+    parser.add_argument('--pretrained-harmonization', type=str, default=None)
     parser.add_argument('--pretrained-fusion', type=str, default=None)
     args = parser.parse_args(args)
 
@@ -89,10 +90,12 @@ def main(args=None):
         contrast_names = ["T1", "T2", "PD", "FLAIR"]
         target_images, target_contrasts, norm_vals = [], [], []
         for target_image_path in args.target_image:
-            target_contrasts.append([t for t in contrast_names if t in target_image_path][0])
+            target_contrasts.append([t for t in contrast_names if t in target_image_path.upper()][0])
             target_image_tmp, _, _, norm_val = obtain_single_image(target_image_path)
             target_images.append(target_image_tmp.permute(2, 1, 0).permute(0, 2, 1).flip(1)[100:120, ...])
             norm_vals.append(norm_val)
+        target_theta = np.zeros((2,))
+        target_eta = np.zeros((2,))
     else:
         target_images = None
         target_theta = parse_array(args.target_theta)
@@ -114,6 +117,3 @@ def main(args=None):
                     num_batches=args.num_batches,
                     save_intermediate=args.save_intermediate,
                     norm_val=norm_vals)
-
-
-
