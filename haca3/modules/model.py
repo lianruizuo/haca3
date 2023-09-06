@@ -6,7 +6,6 @@ import random
 import torch
 from torch import nn, autograd
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 from torchvision import utils
 import nibabel as nib
 from torchvision.transforms import ToTensor
