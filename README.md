@@ -1,18 +1,17 @@
-# HACA3
+# HACA3: A unified approach for multi-site MR image harmonization | [Paper](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
 
 
-## Getting started
+## Installation from Source
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Install using `pip`
+Clone the [repository](https://gitlab.com/iacl/haca3.git) and navigate to the root project directory.
+Run:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+ ```pip install .```
 
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59.
+This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 ```
 cd existing_repo
 git remote add origin https://gitlab.com/lr_zuo/haca3.git

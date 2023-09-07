@@ -478,24 +478,12 @@ class HACA3:
                                              f'epoch{str(epoch).zfill(3)}_batch{str(batch_id).zfill(4)}.pt')
                     self.save_model(file_name, epoch)
 
-    def harmonize(self, source_images, target_images, target_theta, target_eta, target_contrasts, contrast_dropout, out_dir, file_name,
+    def harmonize(self, source_images, target_images, target_theta, target_eta, target_contrasts, contrast_dropout,
+                  out_dir, file_name,
                   recon_orientation, header, affine, num_batches=4, save_intermediate=False, norm_val=1000.0):
-        """
-        Harmonize source images to target images.
-        :param num_batches:
-        :param source_imgs:
-        :param target_imgs:
-        :param contrast_dropout:
-        :param out_dir:
-        :param prefix:
-        :param recon_orientation:
-        :param header:
-        :param affine:
-        :return:
-        """
         contrast_names = ['T1', 'T2', 'PD', 'FLAIR']
         mkdir_p(out_dir)
-        prefix = file_name.replace('.nii.gz','')
+        prefix = file_name.replace('.nii.gz', '')
         with torch.set_grad_enabled(False):
             self.beta_encoder.eval()
             self.theta_encoder.eval()
@@ -528,15 +516,19 @@ class HACA3:
             logits = apply_beta_mask(masks, logits)
 
             # 2. calculate theta, eta for target images
-            queries, thetas_target, etas_target = [], [], []
-            for target_img in target_images:
-                target_img = target_img.to(self.device).unsqueeze(1)  # (num_slices, 1, 288, 288)
-                theta_target, _ = self.theta_encoder(target_img)
-                theta_target = theta_target.mean(dim=0, keepdim=True)
-                eta_target = self.eta_encoder(target_img).mean(dim=0, keepdim=True).view(1, self.eta_dim, 1, 1)
-                thetas_target.append(theta_target)
-                etas_target.append(etas_target)
-                queries.append(torch.cat([theta_target, eta_target], dim=1))
+            if target_images is not None:
+                queries, thetas_target, etas_target = [], [], []
+                for target_img in target_images:
+                    target_img = target_img.to(self.device).unsqueeze(1)  # (num_slices, 1, 288, 288)
+                    theta_target, _ = self.theta_encoder(target_img)
+                    theta_target = theta_target.mean(dim=0, keepdim=True)
+                    eta_target = self.eta_encoder(target_img).mean(dim=0, keepdim=True).view(1, self.eta_dim, 1, 1)
+                    thetas_target.append(theta_target)
+                    etas_target.append(etas_target)
+                    queries.append(torch.cat([theta_target, eta_target], dim=1))
+            else:
+                theta_target = target_theta.to(self.device).view(1, self.theta_dim, 1, 1)
+
 
             # 3. save encoded variables
             if save_intermediate:

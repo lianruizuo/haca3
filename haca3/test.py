@@ -73,7 +73,7 @@ def main(args=None):
         parser.error("At least one source image must be provided.")
 
     if args.target_image is None and args.target_theta is None:
-        parser.error("Target image OR target theta value should be provided.")
+        parser.error('"target_image" OR "target_theta" should be provided.')
 
     if args.target_image is not None and args.target_theta is not None:
         print('Warning: Both "target_image" and "target_theta" are provided. Only "target_image" will be used...')
