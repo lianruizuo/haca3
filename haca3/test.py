@@ -28,6 +28,7 @@ def obtain_single_image(image_path):
     112 - n_slc // 2:112 + n_slc // 2 + n_slc % 2] = image_vol
     return ToTensor()(image_padded), image_obj.affine, image_obj.header, norm_val
 
+
 def load_source_images(image_paths):
     source_images = []
     contrast_dropout = np.ones((4,)).astype(np.float32) * 1e5
@@ -39,6 +40,7 @@ def load_source_images(image_paths):
             image_vol = ToTensor()(np.ones((224, 224, 224)).astype(np.float32))
         source_images.append(image_vol.float().permute(2, 1, 0))
     return source_images, contrast_dropout, image_affine, image_header
+
 
 def parse_array(arg_str):
     return np.array([float(x) for x in arg_str.split(',')])
@@ -84,7 +86,8 @@ def main(args=None):
                   gpu=args.gpu_id)
 
     # ==== LOAD SOURCE IMAGES ====
-    source_images, contrast_dropout, image_affine, image_header = load_source_images([args.t1, args.t2, args.pd, args.flair])
+    source_images, contrast_dropout, image_affine, image_header = load_source_images(
+        [args.t1, args.t2, args.pd, args.flair])
 
     # ==== LOAD TARGET IMAGES IF PROVIDED ====
     if args.target_image is not None:
