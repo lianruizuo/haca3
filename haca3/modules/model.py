@@ -528,13 +528,14 @@ class HACA3:
                     queries.append(torch.cat([theta_target, eta_target], dim=1))
             else:
                 theta_target = target_theta.to(self.device).view(1, self.theta_dim, 1, 1)
-
+                eta_target = target_eta.to(self.device).view(1, self.eta_dim, 1, 1)
+                queries = [torch.cat([theta_target, eta_target], dim=1)]
 
             # 3. save encoded variables
             if save_intermediate:
                 if recon_orientation == 'axial':
                     # 3a. source images
-                    for contrast_id, source_img in enumerate(source_imgs):
+                    for contrast_id, source_img in enumerate(source_images):
                         if contrast_dropout[contrast_id] <= 1.0:
                             img_save = np.array(source_img.cpu().squeeze().permute(1, 2, 0).permute(1, 0, 2)).astype(
                                 np.float32)
