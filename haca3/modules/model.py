@@ -527,9 +527,10 @@ class HACA3:
                     etas_target.append(etas_target)
                     queries.append(torch.cat([theta_target, eta_target], dim=1))
             else:
-                theta_target = target_theta.to(self.device).view(1, self.theta_dim, 1, 1)
-                eta_target = target_eta.to(self.device).view(1, self.eta_dim, 1, 1)
+                theta_target = target_theta.to(self.device).view(1, self.theta_dim, 1, 1).to(source_img.dtype)
+                eta_target = target_eta.to(self.device).view(1, self.eta_dim, 1, 1).to(source_img.dtype)
                 queries = [torch.cat([theta_target, eta_target], dim=1)]
+                thetas_target = [theta_target]
 
             # 3. save encoded variables
             if save_intermediate:
@@ -551,6 +552,8 @@ class HACA3:
                     nib.save(img_save, file_name)
 
             # 4. decoding
+            if target_images is None:
+                target_contrasts = ['given_theta']
             for theta_target, query, target_contrast in zip(thetas_target, queries, target_contrasts):
                 theta_target = theta_target.to(self.device)
                 rec_img, beta_fusion, attn = [], [], []

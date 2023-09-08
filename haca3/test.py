@@ -55,7 +55,7 @@ def main(args=None):
     parser.add_argument('--flair', type=str, default=None)
     parser.add_argument('--target-image', type=str, nargs='+', default=None)
     parser.add_argument('--target-theta', type=str, default=None)
-    parser.add_argument('--target-eta', type=str, default='0.3,0.5')
+    parser.add_argument('--target-eta', type=str, default='0.0,0.0')
     parser.add_argument('--out-dir', type=str, default='.')
     parser.add_argument('--file-name', type=str, default='testing_subject.nii.gz')
     parser.add_argument('--gpu-id', type=int, default=0)
@@ -102,8 +102,10 @@ def main(args=None):
         target_eta = np.zeros((2,))
     else:
         target_images = None
+        target_contrasts = None
         target_theta = parse_array(args.target_theta)
         target_eta = parse_array(args.target_eta)
+        norm_vals = [1.0]
 
     # ===== BEGIN HARMONIZATION WITH HACA3 =====
     # Axial
@@ -154,8 +156,10 @@ def main(args=None):
                     save_intermediate=args.save_intermediate,
                     norm_val=norm_vals)
 
-    print(f'{text_div} START FUSION {text_div}')
+    print(f'{text_div} BEGIN FUSION {text_div}')
     prefix = args.file_name.replace(".nii.gz", "")
+    if target_contrasts is None:
+        target_contrasts = ['given_theta']
     for target_contrast in target_contrasts:
         orientations = ['axial', 'coronal', 'sagittal']
         decode_img_dirs = []
