@@ -5,7 +5,7 @@ import nibabel as nib
 import numpy as np
 import os
 from torchvision.transforms import ToTensor, CenterCrop, Compose, ToPILImage
-from .modules.model import HACA3
+from modules.model import HACA3
 
 
 def normalize_intensity(image):
@@ -43,6 +43,7 @@ def load_source_images(image_paths):
 
 
 def parse_array(arg_str):
+    #return np.array(arg_str)
     return np.array([float(x) for x in arg_str.split(',')])
 
 
@@ -54,7 +55,7 @@ def main(args=None):
     parser.add_argument('--pd', type=str, default=None)
     parser.add_argument('--flair', type=str, default=None)
     parser.add_argument('--target-image', type=str, nargs='+', default=None)
-    parser.add_argument('--target-theta', type=str, default=None)
+    parser.add_argument('--target-theta', type=float, nargs='+', default=None)
     parser.add_argument('--target-eta', type=str, default='0.0,0.0')
     parser.add_argument('--out-dir', type=str, default='.')
     parser.add_argument('--file-name', type=str, default='testing_subject.nii.gz')
@@ -103,7 +104,8 @@ def main(args=None):
     else:
         target_images = None
         target_contrasts = None
-        target_theta = parse_array(args.target_theta)
+        target_theta = np.array(args.target_theta)
+        #target_theta = parse_array(args.target_theta)
         target_eta = parse_array(args.target_eta)
         norm_vals = [1.0]
 
@@ -159,7 +161,8 @@ def main(args=None):
     print(f'{text_div} BEGIN FUSION {text_div}')
     prefix = args.file_name.replace(".nii.gz", "")
     if target_contrasts is None:
-        target_contrasts = ['given_theta']
+        theta_value_array = [str(x) for x in target_theta.flatten()]
+        target_contrasts = [f'theta{"_".join(theta_value_array)}']
     for target_contrast in target_contrasts:
         orientations = ['axial', 'coronal', 'sagittal']
         decode_img_dirs = []
@@ -168,3 +171,6 @@ def main(args=None):
                                                 f'{prefix}_harmonized_to_{target_contrast}_{orientation}.nii.gz'))
         haca3.combine_images(decode_img_dirs, args.out_dir, prefix, target_contrast,
                              args.pretrained_fusion)
+
+if __name__ == '__main__':
+    main()

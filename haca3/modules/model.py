@@ -553,7 +553,8 @@ class HACA3:
 
             # 4. decoding
             if target_images is None:
-                target_contrasts = ['given_theta']
+                theta_value_array = [str(x) for x in theta_target.cpu().numpy().flatten()]
+                target_contrasts = [f'theta{"_".join(theta_value_array)}']
             for theta_target, query, target_contrast in zip(thetas_target, queries, target_contrasts):
                 theta_target = theta_target.to(self.device)
                 rec_img, beta_fusion, attn = [], [], []
