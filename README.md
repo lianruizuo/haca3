@@ -25,13 +25,22 @@ This installs the `haca3` package and creates two CLI aliases `haca3-train` and 
 ## Installation
 
 ### Install from source using `pip`
+1. Clone the repository:
+    ```bash
+    git clone https://gitlab.com/iacl/haca3.git 
+    ```
+2. Navigate to the directory:
+    ```bash
+    cd haca3
+    ```
+3. Install dependencies:
+    ```bash
+    pip install . 
+    ```
+    Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58. 
+This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 Clone the [repository](https://gitlab.com/iacl/haca3.git) and navigate to the root project directory.
 Run:
-
- ```pip install .```
-
-Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58.
-This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 ```
 cd existing_repo
 git remote add origin https://gitlab.com/lr_zuo/haca3.git
