@@ -5,9 +5,8 @@
 2. [Prerequisites](#prerequisites)
 3. [Installation](#installation)
 4. [Usage](#usage)
-5. [Configuration](#configuration)
-6. [License](#license)
-7. [Acknowledgements](#acknoledgements)
+5. [License](#license)
+6. [Acknowledgements](#acknoledgements)
 
 ---
 
@@ -17,8 +16,8 @@ This page provides usage guidance of HACA3 training and inference.
 ---
 
 ## Prerequisites 
-Preprocessing steps of your neuroimage data include: inhomogeneity correction, registration to MNI template, 
-super-resolution for 2D acquired scans (optional, but recommended). 
+Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
+inhomogeneity correction, registration to MNI template, and super-resolution for 2D acquired scans (optional, but recommended). 
 
 --- 
 
@@ -59,20 +58,20 @@ TODO: singularity command will be changed in later versions. Specifying source c
 
 ## Usage
 If you use our software, please cite 
-```bibtex
-@article{ZUO2023102285,
-title = {HACA3: A unified approach for multi-site MR image harmonization},
-journal = {Computerized Medical Imaging and Graphics},
-volume = {109},
-pages = {102285},
-year = {2023},
-issn = {0895-6111},
-doi = {https://doi.org/10.1016/j.compmedimag.2023.102285},
-author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and Samuel W. Remedios and 
-Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
-Susan M. Resnick and Jerry L. Prince and Aaron Carass}
-}
-```
+   ```bibtex
+   @article{ZUO2023102285,
+   title = {HACA3: A unified approach for multi-site MR image harmonization},
+   journal = {Computerized Medical Imaging and Graphics},
+   volume = {109},
+   pages = {102285},
+   year = {2023},
+   issn = {0895-6111},
+   doi = {https://doi.org/10.1016/j.compmedimag.2023.102285},
+   author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and Samuel W. Remedios and 
+   Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
+   Susan M. Resnick and Jerry L. Prince and Aaron Carass}
+   }
+   ```
 TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
 
 ## Acknowledgements
