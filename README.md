@@ -9,9 +9,22 @@
 6. [License](#license)
 7. [Acknowledgements](#acknoledgements)
 
-## Installation from Source
+---
 
-### Install using `pip`
+## Introduction
+This page provides usage guidance of HACA3 training and inference. 
+
+---
+
+## Prerequisites 
+Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58.
+This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
+
+--- 
+
+## Installation
+
+### Install from source using `pip`
 Clone the [repository](https://gitlab.com/iacl/haca3.git) and navigate to the root project directory.
 Run:
 
