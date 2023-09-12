@@ -62,7 +62,10 @@ TODO: singularity command will be changed in later versions. Specifying source c
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
-the Image Analysis and Communications Laboratory. 
-This work was supported in part by the Intramural Research Program of the National Institutes of Health, 
-National Institute on Aging and in part by the TREAT-MS study funded by 
-the Patient-Centered Outcomes Research Institute (PCORI) grant MS-1610-37115 (Co-PIs: Drs. S.D. Newsome and E.M. Mowry).
+the Image Analysis and Communications Laboratory. This work was supported in part by the Intramural Research Program 
+of the National Institutes of Health, National Institute on Aging and in part by the TREAT-MS study funded by 
+the Patient-Centered Outcomes Research Institute (PCORI) grant MS-1610-37115 (Co-PIs: Drs. S.D. Newsome and E.M. Mowry). 
+This material is also partially supported by the National Science Foundation Graduate Research Fellowship under 
+Grant No. DGE-1746891. The work was also funded in part by the NIH grant (R01NS082347, PI: P. Calabresi), 
+National Multiple Sclerosis Society grant (RG-1907-34570, PI: D. Pham), and 
+the DOD/Congressionally Directed Medical Research Programs (CDMRP) grant (MS190131, PI: J. Prince).
