@@ -58,6 +58,20 @@ TODO: singularity command will be changed in later versions. Specifying source c
 ---
 
 ## Usage
+If you use our software, please cite 
+```bibtex
+@article{ZUO2023102285,
+title = {HACA3: A unified approach for multi-site MR image harmonization},
+journal = {Computerized Medical Imaging and Graphics},
+volume = {109},
+pages = {102285},
+year = {2023},
+issn = {0895-6111},
+doi = {https://doi.org/10.1016/j.compmedimag.2023.102285},
+author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and Samuel W. Remedios and 
+Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
+Susan M. Resnick and Jerry L. Prince and Aaron Carass},
+```
 TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
 
 ## Acknowledgements
