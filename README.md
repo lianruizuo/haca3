@@ -39,19 +39,8 @@ inhomogeneity correction, registration to MNI template, and super-resolution for
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-### Option 2: Run HACA3 through singularity image (recommended)
-   ```bash
-   singularity exec --nv -e -B /iacl haca3.sif haca3-test \
-   --t1 [SOURCE-T1W] \
-   --t2 [SOURCE-T2W] \
-   --pd [SOURCE-PDW] \
-   --flair [SOURCE-FLAIR] \
-   --target-image [TARGET-IMAGE] \
-   --pretrained-harmonization [PRETRAINED-HACA3-MODEL] \
-   --pretrained-fusion [PRETRAINED-FUSION-MODEL] \
-   --out-dir [OUTPUT-DIRECTORY] \
-   --file-name [OUTPUT-FILE-NAME] 
-   ```
+### Option 2: Run HACA3 through Singularity image (recommended
+1. Download Singularity image from [GoogleDrive].
 TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
 
 ---
@@ -71,6 +60,19 @@ If you use our software, please cite
    Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
    Susan M. Resnick and Jerry L. Prince and Aaron Carass}
    }
+   ```
+To run Singularity image, 
+```bash
+   singularity exec --nv -e -B /iacl haca3.sif haca3-test \
+   --t1 [SOURCE-T1W] \
+   --t2 [SOURCE-T2W] \
+   --pd [SOURCE-PDW] \
+   --flair [SOURCE-FLAIR] \
+   --target-image [TARGET-IMAGE] \
+   --pretrained-harmonization [PRETRAINED-HACA3-MODEL] \
+   --pretrained-fusion [PRETRAINED-FUSION-MODEL] \
+   --out-dir [OUTPUT-DIRECTORY] \
+   --file-name [OUTPUT-FILE-NAME] 
    ```
 TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
 
