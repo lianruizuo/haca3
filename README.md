@@ -1,6 +1,13 @@
 # HACA3: A unified approach for multi-site MR image harmonization | [Paper](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
-
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Configuration](#configuration)
+6. [License](#license)
+7. [Acknowledgements](#acknoledgements)
 
 ## Installation from Source
 
@@ -10,7 +17,7 @@ Run:
 
  ```pip install .```
 
-Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59.
+Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58.
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 ```
 cd existing_repo
