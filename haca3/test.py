@@ -28,6 +28,7 @@ def obtain_single_image(image_path):
     112 - n_slc // 2:112 + n_slc // 2 + n_slc % 2] = image_vol
     return ToTensor()(image_padded), image_obj.affine, image_obj.header, norm_val
 
+
 def load_source_images(image_paths):
     source_images = []
     contrast_dropout = np.ones((4,)).astype(np.float32) * 1e5
@@ -40,7 +41,9 @@ def load_source_images(image_paths):
         source_images.append(image_vol.float().permute(2, 1, 0))
     return source_images, contrast_dropout, image_affine, image_header
 
+
 def parse_array(arg_str):
+    #return np.array(arg_str)
     return np.array([float(x) for x in arg_str.split(',')])
 
 
@@ -52,8 +55,8 @@ def main(args=None):
     parser.add_argument('--pd', type=str, default=None)
     parser.add_argument('--flair', type=str, default=None)
     parser.add_argument('--target-image', type=str, nargs='+', default=None)
-    parser.add_argument('--target-theta', type=str, default=None)
-    parser.add_argument('--target-eta', type=str, default='0.3,0.5')
+    parser.add_argument('--target-theta', type=float, nargs='+', default=None)
+    parser.add_argument('--target-eta', type=str, default='0.0,0.0')
     parser.add_argument('--out-dir', type=str, default='.')
     parser.add_argument('--file-name', type=str, default='testing_subject.nii.gz')
     parser.add_argument('--gpu-id', type=int, default=0)
@@ -71,7 +74,7 @@ def main(args=None):
         parser.error("At least one source image must be provided.")
 
     if args.target_image is None and args.target_theta is None:
-        parser.error("Target image OR target theta value should be provided.")
+        parser.error('"target_image" OR "target_theta" should be provided.')
 
     if args.target_image is not None and args.target_theta is not None:
         print('Warning: Both "target_image" and "target_theta" are provided. Only "target_image" will be used...')
@@ -84,7 +87,8 @@ def main(args=None):
                   gpu=args.gpu_id)
 
     # ==== LOAD SOURCE IMAGES ====
-    source_images, contrast_dropout, image_affine, image_header = load_source_images([args.t1, args.t2, args.pd, args.flair])
+    source_images, contrast_dropout, image_affine, image_header = load_source_images(
+        [args.t1, args.t2, args.pd, args.flair])
 
     # ==== LOAD TARGET IMAGES IF PROVIDED ====
     if args.target_image is not None:
@@ -99,8 +103,11 @@ def main(args=None):
         target_eta = np.zeros((2,))
     else:
         target_images = None
-        target_theta = parse_array(args.target_theta)
+        target_contrasts = None
+        target_theta = np.array(args.target_theta)
+        #target_theta = parse_array(args.target_theta)
         target_eta = parse_array(args.target_eta)
+        norm_vals = [1.0]
 
     # ===== BEGIN HARMONIZATION WITH HACA3 =====
     # Axial
@@ -151,8 +158,11 @@ def main(args=None):
                     save_intermediate=args.save_intermediate,
                     norm_val=norm_vals)
 
-    print(f'{text_div} START FUSION {text_div}')
+    print(f'{text_div} BEGIN FUSION {text_div}')
     prefix = args.file_name.replace(".nii.gz", "")
+    if target_contrasts is None:
+        theta_value_array = [str(x) for x in target_theta.flatten()]
+        target_contrasts = [f'theta{"_".join(theta_value_array)}']
     for target_contrast in target_contrasts:
         orientations = ['axial', 'coronal', 'sagittal']
         decode_img_dirs = []
@@ -161,3 +171,6 @@ def main(args=None):
                                                 f'{prefix}_harmonized_to_{target_contrast}_{orientation}.nii.gz'))
         haca3.combine_images(decode_img_dirs, args.out_dir, prefix, target_contrast,
                              args.pretrained_fusion)
+
+if __name__ == '__main__':
+    main()
