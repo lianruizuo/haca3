@@ -551,6 +551,12 @@ class HACA3:
                     file_name = os.path.join(out_dir, f'{prefix}_beta_axial.nii.gz')
                     nib.save(img_save, file_name)
 
+                    # 3c. thetas
+                    for theta in thetas_target:
+                        theta = theta.cpu().squeeze().numpy()
+                        np.savetxt(os.path.join(out_dir, f'{prefix}_theta_target.txt'), theta, fmt='%3f', delimiter=',')
+                        theta = torch.from_numpy(theta).unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
+
             # 4. decoding
             if target_images is None:
                 theta_value_array = [str(x) for x in theta_target.cpu().numpy().flatten()]
