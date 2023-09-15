@@ -39,7 +39,7 @@ inhomogeneity correction, registration to MNI template, and super-resolution for
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-### Option 2: Run HACA3 through Singularity image (recommended
+### Option 2: Run HACA3 through Singularity image (recommended)
 1. Download Singularity image from [GoogleDrive].
 TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
 
