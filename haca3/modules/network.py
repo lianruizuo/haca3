@@ -124,34 +124,64 @@ class ThetaEncoder(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, 32, 32, 32, 0),  # (*, in_ch, 224, 244) --> (*, 32, 7, 7)
+            nn.Conv2d(in_ch, 32, 17, 9, 4),
             nn.InstanceNorm2d(32),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(32, 64, 1, 1, 0),
-            nn.InstanceNorm2d(32),
-            nn.LeakyReLU(0.1))
-        self.mu_conv = nn.Sequential(
-            nn.Conv2d(64, 64, 3, 1, 1),
+            nn.LeakyReLU(0.1),  # (*, 32, 28, 28)
+            nn.Conv2d(32, 64, 4, 2, 1),
             nn.InstanceNorm2d(64),
+            nn.LeakyReLU(0.1),  # (*, 64, 14, 14)
+            nn.Conv2d(64, 64, 4, 2, 1),
+            nn.InstanceNorm2d(64),
+            nn.LeakyReLU(0.1))  # (* 64, 7, 7)
+        self.mean_conv = nn.Sequential(
+            nn.Conv2d(64, 32, 3, 1, 1),
+            nn.InstanceNorm2d(32),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(64, out_ch, 7, 7, 0))
+            nn.Conv2d(32, out_ch, 6, 6, 0))
         self.logvar_conv = nn.Sequential(
-            nn.Conv2d(64, 64, 3, 1, 1),
-            nn.InstanceNorm2d(64),
+            nn.Conv2d(64, 32, 3, 1, 1),
+            nn.InstanceNorm2d(32),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(64, out_ch, 7, 7, 0))
+            nn.Conv2d(32, out_ch, 6, 6, 0))
 
-    def forward(self, x, patch_shuffle=False):
-        m = self.conv(x)
-        if patch_shuffle:
-            batch_size = m.shape[0]
-            num_features = m.shape[1]
-            num_patches_per_dim = m.shape[-1]
-            m = m.view(batch_size, num_features, -1)[:, :, torch.randperm(num_patches_per_dim ** 2)]
-            m = m.view(batch_size, num_features, num_patches_per_dim, num_patches_per_dim)
-        mu = self.mu_conv(m)
-        logvar = self.logvar_conv(m)
+    def forward(self, x):
+        M = self.conv(x)
+        mu = self.mean_conv(M)
+        logvar = self.logvar_conv(M)
         return mu, logvar
+
+# class ThetaEncoder(nn.Module):
+#     def __init__(self, in_ch, out_ch):
+#         super().__init__()
+#         self.conv = nn.Sequential(
+#             nn.Conv2d(in_ch, 32, 32, 32, 0),  # (*, in_ch, 224, 244) --> (*, 32, 7, 7)
+#             nn.InstanceNorm2d(32),
+#             nn.LeakyReLU(0.1),
+#             nn.Conv2d(32, 64, 1, 1, 0),
+#             # nn.InstanceNorm2d(64),
+#             nn.LeakyReLU(0.1))
+#         self.mu_conv = nn.Sequential(
+#             nn.Conv2d(64, 64, 3, 1, 1),
+#             nn.InstanceNorm2d(64),
+#             nn.LeakyReLU(0.1),
+#             nn.Conv2d(64, out_ch, 7, 7, 0))
+#         self.logvar_conv = nn.Sequential(
+#             nn.Conv2d(64, 64, 3, 1, 1),
+#             nn.InstanceNorm2d(64),
+#             nn.LeakyReLU(0.1),
+#             nn.Conv2d(64, out_ch, 7, 7, 0))
+#
+#     def forward(self, x, patch_shuffle=False):
+#         m = self.conv(x)
+#         if patch_shuffle:
+#             batch_size = m.shape[0]
+#             num_features = m.shape[1]
+#             num_patches_per_dim = m.shape[-1]
+#             m = m.view(batch_size, num_features, -1)[:, :, torch.randperm(num_patches_per_dim ** 2)]
+#             m = m.view(batch_size, num_features, num_patches_per_dim, num_patches_per_dim)
+#         mu = self.mu_conv(m)
+#         logvar = self.logvar_conv(m)
+#         return mu, logvar
 
 
 class AttentionModule(nn.Module):
@@ -160,15 +190,15 @@ class AttentionModule(nn.Module):
         self.feature_dim = feature_dim
         self.v_ch = v_ch
         self.q_fc = nn.Sequential(
-            nn.LayerNorm(feature_dim),
-            nn.Linear(feature_dim, 128, bias=False),
+            nn.Linear(feature_dim, 128),
             nn.LeakyReLU(0.1),
-            nn.Linear(128, 32, bias=False))
+            nn.Linear(128, 32),
+            nn.LayerNorm(32))
         self.k_fc = nn.Sequential(
-            nn.LayerNorm(feature_dim),
-            nn.Linear(feature_dim, 128, bias=False),
+            nn.Linear(feature_dim, 128),
             nn.LeakyReLU(0.1),
-            nn.Linear(128, 32, bias=False))
+            nn.Linear(128, 32),
+            nn.LayerNorm(32))
         self.scale = feature_dim ** (-0.5)
         self.temperature = 1.0
 

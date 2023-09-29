@@ -3,7 +3,7 @@ import numpy as np
 import random
 import torch
 from torch import nn
-from torch.optim import AdamW
+from torch.optim import Adam
 from torch.optim.lr_scheduler import CyclicLR
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
@@ -72,12 +72,12 @@ class HACA3:
         self.contrastive_loss = PatchNCELoss()
 
         # define optimizer and learning rate scheduler
-        self.optimizer = AdamW(list(self.beta_encoder.parameters()) +
-                               list(self.theta_encoder.parameters()) +
-                               list(self.decoder.parameters()) +
-                               list(self.attention_module.parameters()) +
-                               list(self.patchifier.parameters()), lr=lr)
-        self.scheduler = CyclicLR(self.optimizer, base_lr=2e-4, max_lr=7e-4, cycle_momentum=False)
+        self.optimizer = Adam(list(self.beta_encoder.parameters()) +
+                              list(self.theta_encoder.parameters()) +
+                              list(self.decoder.parameters()) +
+                              list(self.attention_module.parameters()) +
+                              list(self.patchifier.parameters()), lr=lr)
+        self.scheduler = CyclicLR(self.optimizer, base_lr=4e-4, max_lr=7e-4, cycle_momentum=False)
         self.writer_path = os.path.join(self.out_dir, self.timestr)
         self.writer = SummaryWriter(self.writer_path)
         if self.checkpoint is not None:
@@ -272,9 +272,9 @@ class HACA3:
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1),
             self.patchifier(torch.cat([source_images_stack[[subject_id], :, :, :, positive_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1),
-            self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, positive_contrast_ids[subject_id]]
+            self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, query_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1)[:, :, torch.randperm(num_positive_patches)],
-            self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, positive_contrast_ids[subject_id]]
+            self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, query_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1)[torch.randperm(batch_size), :, :]
             ], dim=-1)
         return query_feature, positive_feature, negative_feature
@@ -299,7 +299,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature, negative_feature)
 
         # COMBINE LOSSES
-        total_loss = 10*rec_loss + perceptual_loss + 1e-3*kld_loss + 5e-2*beta_loss
+        total_loss = 10*rec_loss + perceptual_loss + 1e-4*kld_loss + 5e-2*beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
@@ -379,7 +379,7 @@ class HACA3:
         eta_target = self.calculate_eta(target_image)
         query = torch.cat([theta_target, eta_target], dim=1)
         keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
-        if epoch <= 1 or torch.rand((1,)) > 0.5:
+        if epoch <= 1 or torch.rand((1,)) > 0.3:
             contrast_id_to_drop = contrast_id_for_decoding
         else:
             contrast_id_to_drop = None
@@ -401,7 +401,6 @@ class HACA3:
         if epoch > 1:
             random_index = torch.randperm(batch_size)
             target_image_shuffled = target_image[random_index, ...]
-            available_contrast_id_shuffled = available_contrast_id[random_index, ...]
             logits, betas = self.calculate_beta(source_images)
             thetas_source, _, _ = self.calculate_theta(source_images)
             etas_source = self.calculate_eta(source_images)
@@ -410,7 +409,7 @@ class HACA3:
             query = torch.cat([theta_target, eta_target], dim=1)
             keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
             rec_image, attention, logit_fusion, beta_fusion = self.decode(logits, theta_target, query, keys,
-                                                                          available_contrast_id_shuffled,
+                                                                          available_contrast_id,
                                                                           contrast_dropout=False)
             theta_recon, _ = self.theta_encoder(rec_image)
             eta_recon = self.eta_encoder(rec_image)

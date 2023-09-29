@@ -95,6 +95,7 @@ class PatchNCELoss(nn.Module):
         targets = torch.zeros(B * N, dtype=torch.long).to(query_feature.device)
         return self.ce_loss(predictions, targets).mean()
 
+
 # class PatchNCELoss(nn.Module):
 #     def __init__(self, temperature=1.0):
 #         super().__init__()
@@ -105,8 +106,8 @@ class PatchNCELoss(nn.Module):
 #         positive_feature = F.normalize(positive_feature, p=2, dim=1)
 #         negative_feature = F.normalize(negative_feature, p=2, dim=1)
 #
-#         positive_similarity = torch.sum(query_feature * positive_feature.detach(), dim=1) / self.temperature
-#         negative_similarity = torch.matmul(query_feature.permute(0, 2, 1), negative_feature.detach()) / self.temperature
+#         positive_similarity = torch.sum(query_feature * positive_feature, dim=1) / self.temperature
+#         negative_similarity = torch.matmul(query_feature.permute(0, 2, 1), negative_feature) / self.temperature
 #         negative_similarity, _ = torch.max(negative_similarity, dim=2)
 #
 #         loss = -torch.log(torch.exp(positive_similarity) /
