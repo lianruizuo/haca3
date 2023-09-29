@@ -164,7 +164,7 @@ class HACA3:
         """
         target_image_combined = torch.cat([d['image'] for d in image_dicts], dim=1)
         # (batch_size, num_contrasts)
-        available_contrasts = torch.stack([d['exists'] for d in image_dicts], dim=-1).to(self.device)
+        available_contrasts = torch.stack([d['exists'] for d in image_dicts], dim=-1)
         subject_ids = available_contrasts.nonzero(as_tuple=True)[0]
         contrast_ids = available_contrasts.nonzero(as_tuple=True)[1]
         unique_subject_ids = list(torch.unique(subject_ids))
@@ -172,8 +172,8 @@ class HACA3:
         for i in unique_subject_ids:
             selected_contrast_ids.append(random.choice(contrast_ids[subject_ids == i]))
         target_image = target_image_combined[unique_subject_ids, selected_contrast_ids, ...].unsqueeze(1).to(self.device)
-        selected_contrast_id = available_contrasts.clone()
-        selected_contrast_id[unique_subject_ids, selected_contrast_ids, ...] = 0
+        selected_contrast_id = torch.zeros_like(available_contrasts).to(self.device)
+        selected_contrast_id[unique_subject_ids, selected_contrast_ids, ...] = 1.0
         return target_image, selected_contrast_id
 
     def decode(self, logits, target_theta, query, keys, available_contrast_id, contrast_dropout=False,
@@ -299,7 +299,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature, negative_feature)
 
         # COMBINE LOSSES
-        total_loss = 10*rec_loss + perceptual_loss + 1e-3*kld_loss + beta_loss
+        total_loss = 10*rec_loss + perceptual_loss + 1e-3*kld_loss + 5e-2*beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
@@ -379,10 +379,14 @@ class HACA3:
         eta_target = self.calculate_eta(target_image)
         query = torch.cat([theta_target, eta_target], dim=1)
         keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
+        if epoch <= 1 or torch.rand((1,)) > 0.5:
+            contrast_id_to_drop = contrast_id_for_decoding
+        else:
+            contrast_id_to_drop = None
         rec_image, attention, logit_fusion, beta_fusion = self.decode(logits, theta_target, query, keys,
                                                                       available_contrast_id,
                                                                       contrast_dropout=contrast_dropout,
-                                                                      contrast_id_to_drop=None if torch.rand((1,)) < 0.5 else contrast_id_for_decoding)
+                                                                      contrast_id_to_drop=contrast_id_to_drop)
         loss = self.calculate_loss(rec_image, target_image, mu_target, logvar_target,
                                    betas, source_images, available_contrast_id, is_train=is_train)
 

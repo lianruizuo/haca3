@@ -78,22 +78,40 @@ class PerceptualLoss(nn.Module):
 
 
 class PatchNCELoss(nn.Module):
-    def __init__(self, temperature=1.0):
+    def __init__(self, temperature=0.1):
         super().__init__()
+        self.ce_loss = nn.CrossEntropyLoss(reduction='none')
         self.temperature = temperature
 
     def forward(self, query_feature, positive_feature, negative_feature):
-        query_feature = F.normalize(query_feature, p=2, dim=1)
-        positive_feature = F.normalize(positive_feature, p=2, dim=1)
-        negative_feature = F.normalize(negative_feature, p=2, dim=1)
+        B, C, N = query_feature.shape
 
-        positive_similarity = torch.sum(query_feature * positive_feature.detach(), dim=1) / self.temperature
-        negative_similarity = torch.matmul(query_feature.permute(0, 2, 1), negative_feature.detach()) / self.temperature
-        negative_similarity, _ = torch.max(negative_similarity, dim=2)
+        l_positive = (query_feature * positive_feature).sum(dim=1)[:, :, None]
+        l_negative = torch.bmm(query_feature.permute(0, 2, 1), negative_feature)
 
-        loss = -torch.log(torch.exp(positive_similarity) /
-                          (torch.exp(positive_similarity + torch.exp(negative_similarity)) + 1e-5))
-        return loss.mean()
+        logits = torch.cat((l_positive, l_negative), dim=2) / self.temperature
+
+        predictions = logits.flatten(0, 1)
+        targets = torch.zeros(B * N, dtype=torch.long).to(query_feature.device)
+        return self.ce_loss(predictions, targets).mean()
+
+# class PatchNCELoss(nn.Module):
+#     def __init__(self, temperature=1.0):
+#         super().__init__()
+#         self.temperature = temperature
+#
+#     def forward(self, query_feature, positive_feature, negative_feature):
+#         query_feature = F.normalize(query_feature, p=2, dim=1)
+#         positive_feature = F.normalize(positive_feature, p=2, dim=1)
+#         negative_feature = F.normalize(negative_feature, p=2, dim=1)
+#
+#         positive_similarity = torch.sum(query_feature * positive_feature.detach(), dim=1) / self.temperature
+#         negative_similarity = torch.matmul(query_feature.permute(0, 2, 1), negative_feature.detach()) / self.temperature
+#         negative_similarity, _ = torch.max(negative_similarity, dim=2)
+#
+#         loss = -torch.log(torch.exp(positive_similarity) /
+#                           (torch.exp(positive_similarity + torch.exp(negative_similarity)) + 1e-5))
+#         return loss.mean()
 
 
 class KLDivergenceLoss(nn.Module):
