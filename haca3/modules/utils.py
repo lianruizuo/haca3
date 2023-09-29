@@ -3,7 +3,7 @@ from torch.nn import functional as F
 from torch import nn
 import numpy as np
 import random
-from skimage.morphology import isotropic_closing
+from skimage.morphology import binary_closing, isotropic_closing
 
 
 def selecting_available_contrasts(target_imgs, reference_imgs, available_contrasts_label):

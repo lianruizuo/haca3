@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torchvision import models
+from torchvision.models.vgg import VGG16_Weights
 import math
 
 
@@ -29,6 +30,8 @@ class FusionNet(nn.Module):
 class Vgg16(nn.Module):
     def __init__(self, requires_grad=False):
         super().__init__()
+        # vgg_pretrained_features = models.vgg16(weights='imagenet')
+        # vgg_pretrained_features = models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
         vgg_pretrained_features = models.vgg16(pretrained=True).features
         self.module = nn.Sequential()
 

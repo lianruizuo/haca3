@@ -1,6 +1,6 @@
 import argparse
 import sys
-from modules.model import HACA3
+from .modules.model import HACA3
 
 
 def main(args=None):
@@ -44,7 +44,3 @@ def main(args=None):
 
     # ==== START TRAINING ====
     haca3.train_harmonization(epochs=args.epochs)
-
-
-if __name__ == '__main__':
-    main()

@@ -22,7 +22,7 @@ class HACA3:
         self.beta_dim = beta_dim
         self.theta_dim = theta_dim
         self.eta_dim = eta_dim
-        self.device = torch.device("cuda:0" if gpu == 0 else "cuda:1")
+        self.device = torch.device(f"cuda:{gpu}")
 
         # define networks
         self.beta_encoder = UNet(in_ch=1, out_ch=self.beta_dim, base_ch=4, final_act='noact')
@@ -478,23 +478,12 @@ class HACA3:
                                              f'epoch{str(epoch).zfill(3)}_batch{str(batch_id).zfill(4)}.pt')
                     self.save_model(file_name, epoch)
 
-    def harmonization(self, source_imgs, target_imgs, target_contrasts, contrast_dropout, out_dir, prefix,
-                      recon_orientation, header, affine, num_batches=4, save_intermediate=False, norm_val=1000.0):
-        """
-        Harmonize source images to target images.
-        :param num_batches:
-        :param source_imgs:
-        :param target_imgs:
-        :param contrast_dropout:
-        :param out_dir:
-        :param prefix:
-        :param recon_orientation:
-        :param header:
-        :param affine:
-        :return:
-        """
+    def harmonize(self, source_images, target_images, target_theta, target_eta, target_contrasts, contrast_dropout,
+                  out_dir, file_name,
+                  recon_orientation, header, affine, num_batches=4, save_intermediate=False, norm_val=1000.0):
         contrast_names = ['T1', 'T2', 'PD', 'FLAIR']
         mkdir_p(out_dir)
+        prefix = file_name.replace('.nii.gz', '')
         with torch.set_grad_enabled(False):
             self.beta_encoder.eval()
             self.theta_encoder.eval()
@@ -502,7 +491,7 @@ class HACA3:
             self.decoder.eval()
             # 1. calculate beta, theta, eta from source images
             logits, betas, keys, masks = [], [], [], []
-            for source_img in source_imgs:
+            for source_img in source_images:
                 source_img = source_img.unsqueeze(1)
                 source_img_batches = divide_into_batches(source_img, num_batches)
                 mask_tmp, logit_tmp, beta_tmp, key_tmp = [], [], [], []
@@ -527,21 +516,27 @@ class HACA3:
             logits = apply_beta_mask(masks, logits)
 
             # 2. calculate theta, eta for target images
-            queries, thetas_target, etas_target = [], [], []
-            for target_img in target_imgs:
-                target_img = target_img.to(self.device).unsqueeze(1)  # (num_slices, 1, 288, 288)
-                theta_target, _ = self.theta_encoder(target_img)
-                theta_target = theta_target.mean(dim=0, keepdim=True)
-                eta_target = self.eta_encoder(target_img).mean(dim=0, keepdim=True).view(1, self.eta_dim, 1, 1)
-                thetas_target.append(theta_target)
-                etas_target.append(etas_target)
-                queries.append(torch.cat([theta_target, eta_target], dim=1))
+            if target_images is not None:
+                queries, thetas_target, etas_target = [], [], []
+                for target_img in target_images:
+                    target_img = target_img.to(self.device).unsqueeze(1)  # (num_slices, 1, 288, 288)
+                    theta_target, _ = self.theta_encoder(target_img)
+                    theta_target = theta_target.mean(dim=0, keepdim=True)
+                    eta_target = self.eta_encoder(target_img).mean(dim=0, keepdim=True).view(1, self.eta_dim, 1, 1)
+                    thetas_target.append(theta_target)
+                    etas_target.append(etas_target)
+                    queries.append(torch.cat([theta_target, eta_target], dim=1))
+            else:
+                theta_target = target_theta.to(self.device).view(1, self.theta_dim, 1, 1).to(source_img.dtype)
+                eta_target = target_eta.to(self.device).view(1, self.eta_dim, 1, 1).to(source_img.dtype)
+                queries = [torch.cat([theta_target, eta_target], dim=1)]
+                thetas_target = [theta_target]
 
             # 3. save encoded variables
             if save_intermediate:
                 if recon_orientation == 'axial':
                     # 3a. source images
-                    for contrast_id, source_img in enumerate(source_imgs):
+                    for contrast_id, source_img in enumerate(source_images):
                         if contrast_dropout[contrast_id] <= 1.0:
                             img_save = np.array(source_img.cpu().squeeze().permute(1, 2, 0).permute(1, 0, 2)).astype(
                                 np.float32)
@@ -549,14 +544,6 @@ class HACA3:
                             img_save = nib.Nifti1Image(img_save, affine, header)
                             file_name = os.path.join(out_dir, f'{prefix}_source_{contrast_names[contrast_id]}.nii.gz')
                             nib.save(img_save, file_name)
-
-                            # logits
-                            img_save = np.array(logits[contrast_id].cpu().squeeze().permute(2, 3, 1, 0).permute(1, 0, 2, 3))
-                            img_save = img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96, :]
-                            img_save = nib.Nifti1Image(img_save, affine, header)
-                            file_name = os.path.join(out_dir, f'{prefix}_logit_{contrast_names[contrast_id]}.nii.gz')
-                            nib.save(img_save, file_name)
-
                     # 3b. beta images
                     beta = torch.stack(betas, dim=-1).cpu().squeeze().permute(1, 2, 0, 3).permute(1, 0, 2, 3)
                     img_save = nib.Nifti1Image(np.array(beta)[112 - 96:112 + 96, :, 112 - 96:112 + 96, :],
@@ -564,10 +551,16 @@ class HACA3:
                     file_name = os.path.join(out_dir, f'{prefix}_beta_axial.nii.gz')
                     nib.save(img_save, file_name)
 
-
-
+                    # 3c. thetas
+                    for theta in thetas_target:
+                        theta = theta.cpu().squeeze().numpy()
+                        np.savetxt(os.path.join(out_dir, f'{prefix}_theta_target.txt'), theta, fmt='%3f', delimiter=',')
+                        theta = torch.from_numpy(theta).unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
 
             # 4. decoding
+            if target_images is None:
+                theta_value_array = [str(x) for x in theta_target.cpu().numpy().flatten()]
+                target_contrasts = [f'theta{"_".join(theta_value_array)}']
             for theta_target, query, target_contrast in zip(thetas_target, queries, target_contrasts):
                 theta_target = theta_target.to(self.device)
                 rec_img, beta_fusion, attn = [], [], []
