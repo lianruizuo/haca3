@@ -6,7 +6,6 @@ import random
 import torch
 from torch import nn, autograd
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 from torchvision import utils
 import nibabel as nib
 from torchvision.transforms import ToTensor
@@ -550,12 +549,23 @@ class HACA3:
                             img_save = nib.Nifti1Image(img_save, affine, header)
                             file_name = os.path.join(out_dir, f'{prefix}_source_{contrast_names[contrast_id]}.nii.gz')
                             nib.save(img_save, file_name)
+
+                            # logits
+                            img_save = np.array(logits[contrast_id].cpu().squeeze().permute(2, 3, 1, 0).permute(1, 0, 2, 3))
+                            img_save = img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96, :]
+                            img_save = nib.Nifti1Image(img_save, affine, header)
+                            file_name = os.path.join(out_dir, f'{prefix}_logit_{contrast_names[contrast_id]}.nii.gz')
+                            nib.save(img_save, file_name)
+
                     # 3b. beta images
                     beta = torch.stack(betas, dim=-1).cpu().squeeze().permute(1, 2, 0, 3).permute(1, 0, 2, 3)
                     img_save = nib.Nifti1Image(np.array(beta)[112 - 96:112 + 96, :, 112 - 96:112 + 96, :],
                                                affine, header)
                     file_name = os.path.join(out_dir, f'{prefix}_beta_axial.nii.gz')
                     nib.save(img_save, file_name)
+
+
+
 
             # 4. decoding
             for theta_target, query, target_contrast in zip(thetas_target, queries, target_contrasts):
