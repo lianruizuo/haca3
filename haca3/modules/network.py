@@ -185,22 +185,23 @@ class ThetaEncoder(nn.Module):
 
 
 class AttentionModule(nn.Module):
-    def __init__(self, feature_dim, v_ch=5):
+    def __init__(self, dim, v_ch=5):
         super().__init__()
-        self.feature_dim = feature_dim
+        self.temperature = 5.0
+        self.dim = dim
         self.v_ch = v_ch
         self.q_fc = nn.Sequential(
-            nn.Linear(feature_dim, 128),
+            nn.Linear(dim, 128),
             nn.LeakyReLU(0.1),
-            nn.Linear(128, 32),
-            nn.LayerNorm(32))
+            nn.Linear(128, 16),
+            nn.LayerNorm(16))
         self.k_fc = nn.Sequential(
-            nn.Linear(feature_dim, 128),
+            nn.Linear(dim, 128),
             nn.LeakyReLU(0.1),
-            nn.Linear(128, 32),
-            nn.LayerNorm(32))
-        self.scale = feature_dim ** (-0.5)
-        self.temperature = 1.0
+            nn.Linear(128, 16),
+            nn.LayerNorm(16))
+
+        self.scale = self.dim ** (-0.5)
 
     def forward(self, q, k, v, modality_dropout=None):
         """

@@ -28,6 +28,17 @@ def get_tensor_from_fpath(fpath):
     return image
 
 
+def background_removal(image_dicts):
+    num_contrasts = len(contrast_names)
+    mask = torch.ones((1, 224, 224))
+    for image_dict in image_dicts:
+        mask = mask * image_dict['image'].ge(1e-8)
+    for i in range(num_contrasts):
+        image_dicts[i]['image'] = image_dicts[i]['image'] * mask
+        image_dicts[i]['image_degrade'] = image_dicts[i]['image_degrade'] * mask
+    return image_dicts
+
+
 class HACA3Dataset(Dataset):
     def __init__(self, dataset_dirs, contrasts, orientations, mode='train'):
         self.mode = mode
@@ -61,4 +72,4 @@ class HACA3Dataset(Dataset):
                           'contrast_id': contrast_id,
                           'exists': 0 if image.mean() > 0.99 else 1}
             image_dicts.append(image_dict)
-        return image_dicts
+        return background_removal(image_dicts)
