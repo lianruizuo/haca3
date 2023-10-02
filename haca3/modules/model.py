@@ -7,7 +7,6 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import CyclicLR
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
-from torch.cuda.amp import autocast, GradScaler
 import torchvision.models as models
 from datetime import datetime
 
@@ -28,7 +27,6 @@ class HACA3:
         self.out_dir = None
         self.optimizer = None
         self.scheduler = None
-        self.scaler = None
         self.writer, self.writer_path = None, None
         self.checkpoint = None
 
@@ -81,7 +79,6 @@ class HACA3:
                               list(self.attention_module.parameters()) +
                               list(self.patchifier.parameters()), lr=lr)
         self.scheduler = CyclicLR(self.optimizer, base_lr=4e-4, max_lr=7e-4, cycle_momentum=False)
-        self.scaler = GradScaler()
         self.writer_path = os.path.join(self.out_dir, self.timestr)
         self.writer = SummaryWriter(self.writer_path)
         if self.checkpoint is not None:
@@ -90,8 +87,6 @@ class HACA3:
             self.scheduler.load_state_dict(self.checkpoint['scheduler'])
             if self.checkpoint.has_key('timestr'):
                 self.timestr = self.checkpoint['timestr']
-            if self.checkpoint.has_key('scaler'):
-                self.scaler.load_state_dict(self.checkpoint['scaler'])
         self.start_epoch = self.start_epoch + 1
 
     def load_dataset(self, dataset_dirs, contrasts, orientations, batch_size):
@@ -329,9 +324,8 @@ class HACA3:
         total_loss = 10 * rec_loss + 1e-1 * perceptual_loss + 1e-5 * kld_loss + 5e-2 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
-            self.scaler.scale(total_loss).backward()
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
+            total_loss.backward()
+            self.optimizer.step()
             self.scheduler.step()
         loss = {'rec_loss': rec_loss.item(),
                 'per_loss': perceptual_loss.item(),
@@ -349,9 +343,8 @@ class HACA3:
         cycle_loss = theta_loss + eta_loss + 1e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
-            self.scaler.scale(1e-2 * cycle_loss).backward()
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
+            (1e-2 * cycle_loss).backward()
+            self.optimizer.step()
             self.scheduler.step()
         loss = {'theta_cyc': theta_loss.item(),
                 'eta_cyc': eta_loss.item(),
@@ -512,8 +505,7 @@ class HACA3:
             self.attention_module.train()
             self.patchifier.train()
             for batch_id, image_dicts in enumerate(self.train_loader):
-                with autocast():
-                    self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='train')
+                self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='train')
 
             # ====== 2. VALIDATION ======
             self.valid_loader = tqdm(self.valid_loader)
