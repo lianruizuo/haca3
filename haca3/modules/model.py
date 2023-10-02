@@ -7,6 +7,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import CyclicLR
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
+from torch.cuda.amp import autocast, GradScaler
 import torchvision.models as models
 from datetime import datetime
 
@@ -27,6 +28,7 @@ class HACA3:
         self.out_dir = None
         self.optimizer = None
         self.scheduler = None
+        self.scaler = None
         self.writer, self.writer_path = None, None
         self.checkpoint = None
 
@@ -79,6 +81,7 @@ class HACA3:
                               list(self.attention_module.parameters()) +
                               list(self.patchifier.parameters()), lr=lr)
         self.scheduler = CyclicLR(self.optimizer, base_lr=4e-4, max_lr=7e-4, cycle_momentum=False)
+        self.scaler = GradScaler()
         self.writer_path = os.path.join(self.out_dir, self.timestr)
         self.writer = SummaryWriter(self.writer_path)
         if self.checkpoint is not None:
@@ -87,13 +90,15 @@ class HACA3:
             self.scheduler.load_state_dict(self.checkpoint['scheduler'])
             if self.checkpoint.has_key('timestr'):
                 self.timestr = self.checkpoint['timestr']
+            if self.checkpoint.has_key('scaler'):
+                self.scaler.load_state_dict(self.checkpoint['scaler'])
         self.start_epoch = self.start_epoch + 1
 
     def load_dataset(self, dataset_dirs, contrasts, orientations, batch_size):
         train_dataset = HACA3Dataset(dataset_dirs, contrasts, orientations, 'train')
         valid_dataset = HACA3Dataset(dataset_dirs, contrasts, orientations, 'valid')
-        self.train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-        self.valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+        self.train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
+        self.valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
     def calculate_theta(self, images):
         if isinstance(images, list):
@@ -190,7 +195,7 @@ class HACA3:
         selected_contrast_id[unique_subject_ids, selected_contrast_ids, ...] = 1.0
         return target_image, selected_contrast_id
 
-    def decode(self, logits, target_theta, query, keys, available_contrast_id, contrast_dropout=False,
+    def decode(self, logits, target_theta, query, keys, available_contrast_id, mask, contrast_dropout=False,
                contrast_id_to_drop=None):
         """
         HACA3 decoding.
@@ -240,7 +245,7 @@ class HACA3:
         logit_fusion, attention = self.attention_module(q, k, v, modality_dropout=1 - available_contrast_id)
         beta_fusion = self.channel_aggregation(reparameterize_logit(logit_fusion))
         combined_map = torch.cat([beta_fusion, target_theta.repeat(1, 1, image_dim, image_dim)], dim=1)
-        rec_image = self.decoder(combined_map)
+        rec_image = self.decoder(combined_map) * mask
         return rec_image, attention, logit_fusion, beta_fusion
 
     def calculate_features_for_contrastive_loss(self, betas, source_images, available_contrast_id):
@@ -288,27 +293,27 @@ class HACA3:
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1),
             self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, query_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1)[:, :,
-                                       torch.randperm(num_positive_patches)],
+            torch.randperm(num_positive_patches)],
             self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, query_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1)[
-                                       torch.randperm(batch_size), :, :],
+            torch.randperm(batch_size), :, :],
             self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, positive_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1)[:, :,
-                                       torch.randperm(num_positive_patches)],
+            torch.randperm(num_positive_patches)],
             self.patchifier(torch.cat([betas_stack[[subject_id], :, :, :, positive_contrast_ids[subject_id]]
                                        for subject_id in range(batch_size)], dim=0)).view(batch_size, 128, -1)[
-                                       torch.randperm(batch_size), :, :]
+            torch.randperm(batch_size), :, :]
         ], dim=-1)
         return query_feature, positive_feature, negative_feature
 
-    def calculate_loss(self, rec_image, ref_image, mu, logvar, betas, source_images, available_contrast_id,
+    def calculate_loss(self, rec_image, ref_image, mask, mu, logvar, betas, source_images, available_contrast_id,
                        is_train=True):
         """
         Calculate losses for HACA3 training and validation.
 
         """
         # 1. reconstruction loss
-        rec_loss = self.l1_loss(rec_image, ref_image).mean()
+        rec_loss = self.l1_loss(rec_image[mask], ref_image[mask]).mean()
         perceptual_loss = self.perceptual_loss(rec_image, ref_image).mean()
 
         # 2. KLD loss
@@ -321,11 +326,12 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 1e-1 * perceptual_loss + 1e-5 * kld_loss + 1e-1 * beta_loss
+        total_loss = 10 * rec_loss + 1e-1 * perceptual_loss + 1e-5 * kld_loss + 5e-2 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
-            total_loss.backward()
-            self.optimizer.step()
+            self.scaler.scale(total_loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
             self.scheduler.step()
         loss = {'rec_loss': rec_loss.item(),
                 'per_loss': perceptual_loss.item(),
@@ -340,11 +346,12 @@ class HACA3:
         eta_loss = self.l1_loss(eta_rec, eta_ref).mean()
         beta_loss = self.l1_loss(beta_rec, beta_ref).mean()
 
-        cycle_loss = theta_loss + eta_loss + 1e-1*beta_loss
+        cycle_loss = theta_loss + eta_loss + 1e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
-            (1e-2 * cycle_loss).backward()
-            self.optimizer.step()
+            self.scaler.scale(1e-2 * cycle_loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
             self.scheduler.step()
         loss = {'theta_cyc': theta_loss.item(),
                 'eta_cyc': eta_loss.item(),
@@ -377,7 +384,8 @@ class HACA3:
                  'attention_module': self.attention_module.state_dict(),
                  'patchifier': self.patchifier.state_dict(),
                  'optimizer': self.optimizer.state_dict(),
-                 'scheduler': self.scheduler.state_dict()}
+                 'scheduler': self.scheduler.state_dict(),
+                 'scaler': self.scaler.state_dict()}
         torch.save(obj=state, f=file_name)
 
     def image_to_image_translation(self, batch_id, epoch, image_dicts, train_or_valid):
@@ -389,6 +397,7 @@ class HACA3:
             is_train = False
 
         source_images = self.prepare_source_images(image_dicts)
+        mask = image_dicts[0]['mask'].to(self.device)
         target_image, contrast_id_for_decoding = self.select_available_contrasts(image_dicts)
         # available_contrast_id: (batch_size, num_contrasts). 1: if available, 0: otherwise.
         available_contrast_id = torch.stack([d['exists'] for d in image_dicts], dim=-1).to(self.device)
@@ -408,9 +417,10 @@ class HACA3:
             contrast_id_to_drop = None
         rec_image, attention, logit_fusion, beta_fusion = self.decode(logits, theta_target, query, keys,
                                                                       available_contrast_id,
+                                                                      mask,
                                                                       contrast_dropout=contrast_dropout,
                                                                       contrast_id_to_drop=contrast_id_to_drop)
-        loss = self.calculate_loss(rec_image, target_image, mu_target, logvar_target,
+        loss = self.calculate_loss(rec_image, target_image, mask, mu_target, logvar_target,
                                    betas, source_images, available_contrast_id, is_train=is_train)
 
         # ====== 2. SAVE IMAGES OF INTRA-SITE I2I ======
@@ -432,7 +442,7 @@ class HACA3:
             query = torch.cat([theta_target, eta_target], dim=1)
             keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
             rec_image, attention, logit_fusion, beta_fusion = self.decode(logits, theta_target, query, keys,
-                                                                          available_contrast_id,
+                                                                          available_contrast_id, mask,
                                                                           contrast_dropout=False)
             theta_recon, _ = self.theta_encoder(rec_image)
             eta_recon = self.eta_encoder(rec_image)
@@ -502,7 +512,8 @@ class HACA3:
             self.attention_module.train()
             self.patchifier.train()
             for batch_id, image_dicts in enumerate(self.train_loader):
-                self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='train')
+                with autocast():
+                    self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='train')
 
             # ====== 2. VALIDATION ======
             self.valid_loader = tqdm(self.valid_loader)

@@ -36,6 +36,7 @@ def background_removal(image_dicts):
     for i in range(num_contrasts):
         image_dicts[i]['image'] = image_dicts[i]['image'] * mask
         image_dicts[i]['image_degrade'] = image_dicts[i]['image_degrade'] * mask
+        image_dicts[i]['mask'] = mask.bool()
     return image_dicts
 
 
