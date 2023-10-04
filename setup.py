@@ -55,7 +55,8 @@ setup(
         "torchvision",
         "tqdm",
         "torchio",
-        "scikit-image"
+        "scikit-image",
+        "tensorboard"
     ],
     cmdclass=cmdclass,
 )
