@@ -122,3 +122,26 @@ class KLDivergenceLoss(nn.Module):
     def forward(self, mu, logvar):
         kld_loss = -0.5 * logvar + 0.5 * (torch.exp(logvar) + torch.pow(mu, 2)) - 0.5
         return kld_loss
+
+
+def divide_into_batches(in_tensor, num_batches):
+    batch_size = in_tensor.shape[0] // num_batches
+    remainder = in_tensor.shape[0] % num_batches
+    batches = []
+
+    current_start = 0
+    for i in range(num_batches):
+        current_end = current_start + batch_size
+        if remainder:
+            current_end += 1
+            remainder -= 1
+        batches.append(in_tensor[current_start:current_end, ...])
+        current_start = current_end
+    return batches
+
+
+def normalize_intensity(image):
+    p99 = np.percentile(image.flatten(), 99)
+    image = np.clip(image, a_min=0.0, a_max=p99)
+    image = image / p99
+    return image, p99

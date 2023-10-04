@@ -8,11 +8,13 @@ from torch.optim.lr_scheduler import CyclicLR
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 import torchvision.models as models
+from torchvision.transforms import ToTensor
 from datetime import datetime
+import nibabel as nib
 
 from .utils import *
 from .dataset import HACA3Dataset
-from .network import UNet, ThetaEncoder, EtaEncoder, Patchifier, AttentionModule
+from .network import UNet, ThetaEncoder, EtaEncoder, Patchifier, AttentionModule, FusionNet
 
 
 class HACA3:
@@ -60,11 +62,6 @@ class HACA3:
         self.start_epoch = 0
 
     def initialize_training(self, out_dir, lr):
-        self.out_dir = out_dir
-        mkdir_p(self.out_dir)
-        mkdir_p(os.path.join(self.out_dir, f'training_results_{self.timestr}'))
-        mkdir_p(os.path.join(self.out_dir, f'training_models_{self.timestr}'))
-
         # define loss functions
         self.l1_loss = nn.L1Loss(reduction='none')
         self.kld_loss = KLDivergenceLoss()
@@ -79,15 +76,21 @@ class HACA3:
                               list(self.attention_module.parameters()) +
                               list(self.patchifier.parameters()), lr=lr)
         self.scheduler = CyclicLR(self.optimizer, base_lr=4e-4, max_lr=7e-4, cycle_momentum=False)
-        self.writer_path = os.path.join(self.out_dir, self.timestr)
-        self.writer = SummaryWriter(self.writer_path)
         if self.checkpoint is not None:
             self.start_epoch = self.checkpoint['epoch']
             self.optimizer.load_state_dict(self.checkpoint['optimizer'])
             self.scheduler.load_state_dict(self.checkpoint['scheduler'])
-            if self.checkpoint.has_key('timestr'):
+            if 'timestr' in self.checkpoint:
                 self.timestr = self.checkpoint['timestr']
         self.start_epoch = self.start_epoch + 1
+
+        self.out_dir = out_dir
+        mkdir_p(self.out_dir)
+        mkdir_p(os.path.join(self.out_dir, f'training_results_{self.timestr}'))
+        mkdir_p(os.path.join(self.out_dir, f'training_models_{self.timestr}'))
+
+        self.writer_path = os.path.join(self.out_dir, self.timestr)
+        self.writer = SummaryWriter(self.writer_path)
 
     def load_dataset(self, dataset_dirs, contrasts, orientations, batch_size):
         train_dataset = HACA3Dataset(dataset_dirs, contrasts, orientations, 'train')
@@ -321,7 +324,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 1e-1 * perceptual_loss + 1e-5 * kld_loss + 5e-2 * beta_loss
+        total_loss = 10 * rec_loss + 5e-1 * perceptual_loss + 1e-5 * kld_loss + 1e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
@@ -377,8 +380,7 @@ class HACA3:
                  'attention_module': self.attention_module.state_dict(),
                  'patchifier': self.patchifier.state_dict(),
                  'optimizer': self.optimizer.state_dict(),
-                 'scheduler': self.scheduler.state_dict(),
-                 'scaler': self.scaler.state_dict()}
+                 'scheduler': self.scheduler.state_dict()}
         torch.save(obj=state, f=file_name)
 
     def image_to_image_translation(self, batch_id, epoch, image_dicts, train_or_valid):
@@ -518,3 +520,160 @@ class HACA3:
             with torch.set_grad_enabled(False):
                 for batch_id, image_dicts in enumerate(self.valid_loader):
                     self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='valid')
+
+    def harmonize(self, source_images, target_images, target_theta, target_eta, out_paths, header,
+                  recon_orientation, norm_vals, num_batches=4, save_intermediate=False, intermediate_out_dir=None):
+        for out_path in out_paths:
+            mkdir_p(out_path.parent)
+        if save_intermediate:
+            mkdir_p(intermediate_out_dir)
+        prefix = out_paths[0].name.replace('.nii.gz', '')
+        with torch.set_grad_enabled(False):
+            self.beta_encoder.eval()
+            self.theta_encoder.eval()
+            self.eta_encoder.eval()
+            self.decoder.eval()
+
+            # === 1. CALCULATE BETA, THETA, ETA FROM SOURCE IMAGES ===
+            logits, betas, keys, masks = [], [], [], []
+            for source_image in source_images:
+                batch_size = source_image.shape[0]
+                source_image = source_image.unsqueeze(1).to(self.device)
+                mask = (source_image > 1e-6) * 1.0
+                logit = self.beta_encoder(source_image)
+                beta = self.channel_aggregation(reparameterize_logit(logit))
+                theta_source, _ = self.theta_encoder(source_image)
+                eta_source = self.eta_encoder(source_image).view(batch_size, self.eta_dim, 1, 1)
+                masks.append(mask)
+                logits.append(logit)
+                betas.append(beta)
+                keys.append(torch.cat([theta_source, eta_source], dim=1))
+
+            # === 2. CALCULATE THETA, ETA FOR TARGET IMAGES (IF NEEDED) ===
+            if target_theta is None:
+                queries, thetas_target = [], []
+                for target_image in target_images:
+                    target_image = target_image.to(self.device).unsqueeze(1)
+                    theta_target, _ = self.theta_encoder(target_image)
+                    theta_target = theta_target.mean(dim=0, keepdim=True)
+                    eta_target = self.eta_encoder(target_image).mean(dim=0, keepdim=True).view(1, self.eta_dim, 1, 1)
+                    thetas_target.append(theta_target)
+                    queries.append(torch.cat([theta_target, eta_target], dim=1).view(1, self.theta_dim+self.eta_dim, 1))
+                if save_intermediate:
+                    # save theta and eta of target images
+                    with open(intermediate_out_dir / f'{prefix}_targets.txt', 'w') as fp:
+                        fp.write(','.join(['img'] + [f'theta{i}' for i in range(self.theta_dim)] +
+                                          [f'eta{i}' for i in range(self.eta_dim)]) + '\n')
+                        for i, img_query in enumerate([query.squeeze().cpu().numpy().tolist() for query in queries]):
+                            fp.write(','.join([f'target{i}'] + ['%.6f' % val for val in img_query]) + '\n')
+            else:
+                queries, thetas_target = [], []
+                for target_theta_tmp, target_eta_tmp in zip(target_theta, target_eta):
+                    thetas_target.append(target_theta_tmp.view(1, self.theta_dim, 1, 1).to(self.device))
+                    queries.append(torch.cat([target_theta_tmp.view(1, self.theta_dim, 1).to(self.device),
+                                              target_eta_tmp.view(1, self.eta_dim, 1).to(self.device)], dim=1))
+
+            # === 3. SAVE ENCODED VARIABLES (IF REQUESTED) ===
+            if save_intermediate:
+                if recon_orientation == 'axial':
+                    # 3a. source images
+                    for i, source_img in enumerate(source_images):
+                        img_save = source_img.squeeze().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
+                        img_save = img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96]
+                        nib.Nifti1Image(img_save, None, header).to_filename(
+                            intermediate_out_dir / f'{prefix}_source{i}.nii.gz'
+                        )
+                    # 3b. beta images
+                    beta = torch.stack(betas, dim=-1).squeeze().permute(1, 2, 0, 3).permute(1, 0, 2,
+                                                                                            3).cpu().numpy()
+                    img_save = nib.Nifti1Image(beta[112 - 96:112 + 96, :, 112 - 96:112 + 96, :], None, header)
+                    file_name = intermediate_out_dir / f'{prefix}_source_betas.nii.gz'
+                    nib.save(img_save, file_name)
+                    # 3c. theta/eta values
+                    with open(intermediate_out_dir / f'{prefix}_sources.txt', 'w') as fp:
+                        fp.write(','.join(['img', 'slice'] + [f'theta{i}' for i in range(self.theta_dim)] +
+                                          [f'eta{i}' for i in range(self.eta_dim)]) + '\n')
+                        for i, img_key in enumerate([key.squeeze().cpu().numpy().tolist() for key in keys]):
+                            for j, slice_key in enumerate(img_key):
+                                fp.write(','.join([f'source{i}', f'slice{j:03d}'] +
+                                                  ['%.6f' % val for val in slice_key]) + '\n')
+
+
+            # ===4. DECODING===
+            rec_images, betas_fusion, attentions = [], [], []
+            for out_path, theta_target, query, norm_val in zip(out_paths, thetas_target, queries, norm_vals):
+                out_prefix = out_path.name.replace('.nii.gz', '')
+                batch_size = keys[0].shape[0]
+                k = torch.cat(keys, dim=-1).view(batch_size, self.theta_dim+self.eta_dim, 1, len(source_images))
+                v = torch.stack(logits, dim=-1).view(batch_size, self.beta_dim, 224*224, len(source_images))
+                logit_fusion, attention = self.attention_module(query.repeat(batch_size, 1, 1), k, v, None)
+                beta_fusion = self.channel_aggregation(reparameterize_logit(logit_fusion))
+                combined_map = torch.cat([beta_fusion, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
+                rec_image = self.decoder(combined_map)
+                rec_image = rec_image * masks[0]
+
+                # ===5. SAVE INTERMEDIATE RESULTS (IF REQUESTED)===
+                # harmonized image
+                if recon_orientation == "axial":
+                    img_save = np.array(rec_image.cpu().squeeze().permute(1, 2, 0).permute(1, 0, 2))
+                elif recon_orientation == "coronal":
+                    img_save = np.array(rec_image.cpu().squeeze().permute(0, 2, 1).flip(2).permute(1, 0, 2))
+                else:
+                    img_save = np.array(rec_image.cpu().squeeze().permute(2, 0, 1).flip(2).permute(1, 0, 2))
+                img_save = nib.Nifti1Image(img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96] * norm_val, None,
+                                           header)
+                file_name = out_path.parent / f'{out_prefix}_harmonized_{recon_orientation}.nii.gz'
+                nib.save(img_save, file_name)
+
+                if save_intermediate:
+                    # 5a. beta fusion
+                    if recon_orientation == 'axial':
+                        img_save = beta_fusion.squeeze().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
+                        img_save = nib.Nifti1Image(img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96], None, header)
+                        file_name = intermediate_out_dir / f'{out_prefix}_beta_fusion.nii.gz'
+                        nib.save(img_save, file_name)
+                    # 5b. logit fusion
+                    if recon_orientation == 'axial':
+                        img_save = logit_fusion.permute(2, 3, 0, 1).permute(1, 0, 2, 3).cpu().numpy()
+                        img_save = nib.Nifti1Image(img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96, :], None, header)
+                        file_name = intermediate_out_dir / f'{out_prefix}_logit_fusion.nii.gz'
+                        nib.save(img_save, file_name)
+                    # 5c. attention
+                    if recon_orientation == 'axial':
+                        img_save = attention.permute(2, 3, 0, 1).permute(1, 0, 2, 3).cpu().numpy()
+                        img_save = nib.Nifti1Image(img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96], None, header)
+                        file_name = intermediate_out_dir / f'{out_prefix}_attention.nii.gz'
+                        nib.save(img_save, file_name)
+
+    def combine_images(self, image_paths, out_path, norm_val, pretrained_fusion=None):
+        # obtain images
+        images = []
+        for image_path in image_paths:
+            image_pad = torch.zeros((224, 224, 224))
+            image_obj = nib.load(image_path)
+            image_vol, _ = normalize_intensity(torch.from_numpy(image_obj.get_fdata().astype(np.float32)))
+            image_pad[112 - 96:112 + 96, :, 112 - 96:112 + 96] = image_vol
+            image_header = image_obj.header
+            images.append(image_pad.numpy())
+
+        if pretrained_fusion is not None:
+            checkpoint = torch.load(pretrained_fusion, map_location=self.device)
+            fusion_net = FusionNet(in_ch=3, out_ch=1)
+            fusion_net.load_state_dict(checkpoint['fusion_net'])
+            fusion_net.to(self.device)
+            image = torch.cat(
+                [ToTensor()(im).permute(2, 1, 0).permute(2, 0, 1).unsqueeze(0).unsqueeze(0) for im in images],
+                dim=1).to(self.device)
+            image_fusion = fusion_net(image).squeeze().detach().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
+        else:
+            # calculate median
+            image_cat = np.stack(images, axis=-1)
+            image_fusion = np.median(image_cat, axis=-1)
+
+        # save fusion_image
+        img_save = image_fusion[112 - 96:112 + 96, :, 112 - 96:112 + 96] * norm_val
+        img_save = nib.Nifti1Image(img_save, None, image_header)
+        prefix = out_path.name.replace('.nii.gz', '')
+        file_name = out_path.parent / f'{prefix}_harmonized_fusion.nii.gz'
+        nib.save(img_save, file_name)
+

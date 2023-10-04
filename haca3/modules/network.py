@@ -4,6 +4,26 @@ import torch.nn.functional as F
 import math
 
 
+class FusionNet(nn.Module):
+    def __init__(self, in_ch=3, out_ch=1):
+        super().__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv3d(in_ch, 8, 3, 1, 1),
+            nn.InstanceNorm3d(8),
+            nn.LeakyReLU(),
+            nn.Conv3d(8, 16, 3, 1, 1),
+            nn.InstanceNorm3d(16),
+            nn.LeakyReLU())
+        self.conv2 = nn.Sequential(
+            nn.Conv3d(in_ch + 16, 16, 3, 1, 1),
+            nn.LeakyReLU(),
+            nn.Conv3d(16, out_ch, 3, 1, 1),
+            nn.ReLU())
+
+    def forward(self, x):
+        # return self.conv2(x + self.conv1(x))
+        return self.conv2(torch.cat([x, self.conv1(x)], dim=1))
+
 class UNet(nn.Module):
     def __init__(self, in_ch, out_ch, conditional_ch=0, num_lvs=4, base_ch=16, final_act='noact'):
         super().__init__()
