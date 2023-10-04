@@ -1,214 +1,15 @@
+import os
 import torch
-from torch.nn import functional as F
 from torch import nn
+from torch.nn import functional as F
+import errno
+import nibabel as nib
+from torchvision import utils
+import torchvision.models as models
 import numpy as np
-import random
-from skimage.morphology import binary_closing, isotropic_closing
 
 
-def selecting_available_contrasts(target_imgs, reference_imgs, available_contrasts_label):
-    """
-    Selecting from available contrasts
-    :param reference_imgs:
-    :param target_imgs:
-    :param available_contrasts_label:
-    :return:
-    """
-    subj_ids = available_contrasts_label.nonzero(as_tuple=True)[0]
-    contrast_ids = available_contrasts_label.nonzero(as_tuple=True)[1]
-    unique_subj_ids = list(torch.unique(subj_ids))
-    selected_contrast_ids = []
-    for subj_id in unique_subj_ids:
-        selected_contrast_ids.append(random.choice(contrast_ids[subj_ids == subj_id]))
-    target_img_combined = torch.cat(target_imgs, dim=1)
-    reference_img_combined = torch.cat(reference_imgs, dim=1)
-
-    return target_img_combined[unique_subj_ids, selected_contrast_ids, ...].unsqueeze(1), \
-        reference_img_combined[unique_subj_ids, selected_contrast_ids, ...].unsqueeze(1), \
-        selected_contrast_ids
-
-
-def apply_beta_mask(masks, betas):
-    mask = masks[0]
-    for mask_tmp in masks:
-        mask = mask * mask_tmp
-    mask = isotropic_closing(np.array(mask.cpu()).astype(bool), radius=5)
-    mask = torch.from_numpy(mask).to(betas[0].get_device())
-    betas = [beta * mask for beta in betas]
-    return betas
-
-
-def dropout_contrasts(available_contrast_label, selected_contrast_ids=None):
-    """
-    Randomly dropout MRI contrasts for HACA3 training.
-    :param selected_contrast_ids:
-    :param available_contrast_label: torch.Tensor
-        Shape (batch_size, num_contrasts)
-    :return:
-    """
-    batch_size = available_contrast_label.shape[0]
-    contrast_dropout_val = (available_contrast_label == 0) * 1e5
-    for subj_id in range(batch_size):
-        num_available_contrasts = int(available_contrast_label[subj_id, :].sum())
-        num_dropped_out_contrasts = np.random.permutation(num_available_contrasts)[0]
-        available_contrast_label_tmp = available_contrast_label[subj_id, :].nonzero(as_tuple=False)
-        dropped_out_contrast_ids = sorted(
-            np.random.choice([s.squeeze() for s in available_contrast_label_tmp],
-                             num_dropped_out_contrasts,
-                             replace=False))
-        for i in dropped_out_contrast_ids:
-            contrast_dropout_val[subj_id, i] = 1e5
-        if selected_contrast_ids is not None:
-            contrast_dropout_val[subj_id, selected_contrast_ids[subj_id]] = 1e5
-    return contrast_dropout_val
-
-
-def reparameterize_logit(logit):
-    beta = F.gumbel_softmax(logit, tau=1.0, dim=1, hard=True)
-    return beta
-
-
-class TemperatureAnneal:
-    def __init__(self, initial_temp=1.0, anneal_rate=0.0, min_temp=0.5, device=torch.device('cuda')):
-        self.initial_temp = initial_temp
-        self.anneal_rate = anneal_rate
-        self.min_temp = min_temp
-        self.device = device
-
-        self._temperature = self.initial_temp
-        self.last_epoch = 0
-
-    def get_temp(self):
-        return self._temperature
-
-    def step(self, epoch=None):
-        if epoch is None:
-            epoch = self.last_epoch + 1
-        self.last_epoch = epoch
-        current_temp = self.initial_temp * np.exp(-self.anneal_rate * self.last_epoch)
-        # noinspection PyArgumentList
-        self._temperature = torch.max(torch.FloatTensor([current_temp, self.min_temp]).to(self.device))
-
-    def reset(self):
-        self._temperature = self.initial_temp
-        self.last_epoch = 0
-
-    def state_dict(self):
-        return {key: value for key, value in self.__dict__.items()}
-
-    def load_state_dict(self, state_dict):
-        self.__dict__.update(state_dict)
-
-
-def softmax(logits, temperature=1.0, dim=1):
-    exps = torch.exp(logits / temperature)
-    return exps / torch.sum(exps, dim=dim)
-
-
-def gumbel(size, device=torch.device('cuda:1'), eps=1e-8):
-    return -torch.log(-torch.log(torch.rand(size, device=device) + eps) + eps)
-
-
-def sample_gumbel_softmax(logits, temperature=1.0, dim=1, device=torch.device('cuda:1')):
-    return F.softmax((logits.to(device) + gumbel(logits.size(), device).to(device)) / temperature, dim=dim)
-
-
-def gumbel_softmax(logits, temperature=1.0, dim=1, hard=True, is_prob=True, device=torch.device('cuda:1')):
-    if is_prob:
-        logits = torch.log(logits + 1e-8)
-    soft_sample = sample_gumbel_softmax(logits, temperature, dim, device)
-    if hard:
-        hard_sample = create_one_hot(soft_sample, dim=dim)
-        return (hard_sample - soft_sample).detach() + soft_sample
-    else:
-        return soft_sample
-
-
-def entropy(in_tensor, marginalize=False):
-    if not marginalize:
-        b = F.softmax(in_tensor, dim=1) * F.log_softmax(in_tensor, dim=1)
-        h = -1.0 * b.sum()
-    else:
-        b = F.softmax(in_tensor, dim=1).mean(0)
-        h = -torch.sum(b * torch.log(b + 1e-6))
-    return h
-
-
-def marginal_cross_entropy(x, y):
-    x = F.softmax(x, dim=1).mean(0)
-    y = F.softmax(y, dim=1).mean(0)
-    h = -torch.sum(x * torch.log(y + 1e-6))
-    return h
-
-
-def create_one_hot(soft_prob, dim):
-    indices = torch.argmax(soft_prob, dim=dim)
-    hard = F.one_hot(indices, soft_prob.size()[dim])
-    new_axes = tuple(range(dim)) + (len(hard.shape) - 1,) + tuple(range(dim, len(hard.shape) - 1))
-    return hard.permute(new_axes).float()
-
-
-class KLDivergenceLoss(nn.Module):
-    def __init__(self, reduction='none'):
-        super(KLDivergenceLoss, self).__init__()
-        self.reduction = reduction
-
-    def forward(self, mu, logvar):
-        kld = -0.5 * logvar + 0.5 * (torch.exp(logvar) + torch.pow(mu, 2)) - 0.5
-        if self.reduction == 'mean':
-            kld = kld.mean()
-        return kld
-
-
-class CosineDissimilarityLoss(nn.Module):
-    def __init__(self, margin=0.0, reduction='mean', eps=1e-6, scale=1.0):
-        super(CosineDissimilarityLoss, self).__init__()
-        self.margin = margin
-        self.eps = eps
-        self.reduction = reduction
-        self.scale = scale
-
-    def forward(self, rec, trg):
-        # noinspection PyTypeChecker
-        loss: torch.Tensor = torch.max(F.cosine_similarity(rec.view(rec.size()[0], rec.size()[1], -1),
-                                                           trg.view(trg.size()[0], trg.size()[1], -1),
-                                                           dim=-1, eps=self.eps) - self.margin,
-                                       torch.as_tensor(0.0, device=rec.device)) * self.scale
-        return loss if self.reduction == 'none' else (torch.mean(loss) if self.reduction == 'mean'
-                                                      else torch.sum(loss))
-
-
-class PatchNCELoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.ce_loss = nn.CrossEntropyLoss(reduction='none')
-
-    def forward(self, patch_query, patch_positive, patch_negative, tau=0.1):
-        """
-        patch_query : torch.Tensor
-            Shape(batch_size, feature_dim, num_pathes)
-        """
-        B, C, N = patch_query.shape
-        N_negative = patch_negative.shape[2]
-
-        # B * N * 1
-        l_pos = (patch_query * patch_positive).sum(dim=1)[:, :, None]
-
-        # B * N * N_negative
-        l_neg = torch.bmm(patch_query.permute(0, 2, 1), patch_negative)
-
-        # B * N * (N_negative + 1)
-        logits = torch.cat((l_pos, l_neg), dim=2) / tau
-
-        predictions = logits.flatten(0, 1)
-        targets = torch.zeros(B * N, dtype=torch.long).to(patch_query.device)
-        return self.ce_loss(predictions, targets)
-
-
-# http://stackoverflow.com/a/22718321
 def mkdir_p(path):
-    import os
-    import errno
     try:
         os.makedirs(path)
     except OSError as exc:
@@ -218,9 +19,114 @@ def mkdir_p(path):
             raise
 
 
-def divide_into_batches(x, num_batches):
-    batch_size = x.shape[0] // num_batches
-    remainder = x.shape[0] % num_batches
+def reparameterize_logit(logit):
+    beta = F.gumbel_softmax(logit, tau=1.0, dim=1, hard=True)
+    return beta
+
+
+def save_image(images, file_name):
+    image_save = torch.cat([image[:4, [0], ...].cpu() for image in images], dim=0)
+    image_save = utils.make_grid(tensor=image_save, nrow=4, normalize=False, range=(0, 1)).detach().numpy()[0, ...]
+    image_save = nib.Nifti1Image(image_save.transpose(1, 0), np.eye(4))
+    nib.save(image_save, file_name)
+
+
+def dropout_contrasts(available_contrast_id, contrast_id_to_drop=None):
+    """
+    Randomly dropout contrasts for HACA3 training.
+
+    ==INPUTS==j
+    * available_contrast_id: torch.Tensor (batch_size, num_contrasts)
+        Indicates the availability of each MR contrast. 1: if available, 0: if unavailable.
+
+    * contrast_id_to_drop: torch.Tensor (batch_size, num_contrasts)
+        If provided, indicates the contrast indexes forced to drop. Default: None
+
+    ==OUTPUTS==
+    * contrast_id_after_dropout: torch.Tensor (batch_size, num_contrasts)
+        Some available contrasts will be randomly dropped out (as if they are unavailable).
+        However, each sample will have at least one contrast available.
+    """
+    batch_size = available_contrast_id.shape[0]
+    if contrast_id_to_drop is not None:
+        available_contrast_id = available_contrast_id - contrast_id_to_drop
+    contrast_id_after_dropout = available_contrast_id.clone()
+    for i in range(batch_size):
+        available_contrast_ids_per_subject = (available_contrast_id[i] == 1).nonzero(as_tuple=False).squeeze(1)
+        num_available_contrasts = available_contrast_ids_per_subject.numel()
+        if num_available_contrasts > 1:
+            num_contrast_to_drop = torch.randperm(num_available_contrasts-1)[0]
+            contrast_ids_to_drop = torch.randperm(num_available_contrasts)[:num_contrast_to_drop]
+            contrast_ids_to_drop = available_contrast_ids_per_subject[contrast_ids_to_drop]
+            contrast_id_after_dropout[i, contrast_ids_to_drop] = 0.0
+    return contrast_id_after_dropout
+
+
+class PerceptualLoss(nn.Module):
+    def __init__(self, vgg_model):
+        super().__init__()
+        for param in vgg_model.parameters():
+            param.requires_grad = False
+        self.vgg = nn.Sequential(*list(vgg_model.children())[:18]).eval()
+
+    def forward(self, x, y):
+        if x.shape[1] == 1:
+            x = x.repeat(1, 3, 1, 1)
+        if y.shape[1] == 1:
+            y = y.repeat(1, 3, 1, 1)
+        return F.l1_loss(self.vgg(x), self.vgg(y))
+
+
+class PatchNCELoss(nn.Module):
+    def __init__(self, temperature=0.1):
+        super().__init__()
+        self.ce_loss = nn.CrossEntropyLoss(reduction='none')
+        self.temperature = temperature
+
+    def forward(self, query_feature, positive_feature, negative_feature):
+        B, C, N = query_feature.shape
+
+        l_positive = (query_feature * positive_feature).sum(dim=1)[:, :, None]
+        l_negative = torch.bmm(query_feature.permute(0, 2, 1), negative_feature)
+
+        logits = torch.cat((l_positive, l_negative), dim=2) / self.temperature
+
+        predictions = logits.flatten(0, 1)
+        targets = torch.zeros(B * N, dtype=torch.long).to(query_feature.device)
+        return self.ce_loss(predictions, targets).mean()
+
+
+# class PatchNCELoss(nn.Module):
+#     def __init__(self, temperature=1.0):
+#         super().__init__()
+#         self.temperature = temperature
+#
+#     def forward(self, query_feature, positive_feature, negative_feature):
+#         query_feature = F.normalize(query_feature, p=2, dim=1)
+#         positive_feature = F.normalize(positive_feature, p=2, dim=1)
+#         negative_feature = F.normalize(negative_feature, p=2, dim=1)
+#
+#         positive_similarity = torch.sum(query_feature * positive_feature, dim=1) / self.temperature
+#         negative_similarity = torch.matmul(query_feature.permute(0, 2, 1), negative_feature) / self.temperature
+#         negative_similarity, _ = torch.max(negative_similarity, dim=2)
+#
+#         loss = -torch.log(torch.exp(positive_similarity) /
+#                           (torch.exp(positive_similarity + torch.exp(negative_similarity)) + 1e-5))
+#         return loss.mean()
+
+
+class KLDivergenceLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, mu, logvar):
+        kld_loss = -0.5 * logvar + 0.5 * (torch.exp(logvar) + torch.pow(mu, 2)) - 0.5
+        return kld_loss
+
+
+def divide_into_batches(in_tensor, num_batches):
+    batch_size = in_tensor.shape[0] // num_batches
+    remainder = in_tensor.shape[0] % num_batches
     batches = []
 
     current_start = 0
@@ -229,7 +135,13 @@ def divide_into_batches(x, num_batches):
         if remainder:
             current_end += 1
             remainder -= 1
-        batches.append(x[current_start:current_end, ...])
+        batches.append(in_tensor[current_start:current_end, ...])
         current_start = current_end
-
     return batches
+
+
+def normalize_intensity(image):
+    p99 = np.percentile(image.flatten(), 99)
+    image = np.clip(image, a_min=0.0, a_max=p99)
+    image = image / p99
+    return image, p99

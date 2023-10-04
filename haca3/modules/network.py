@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torchvision import models
-from torchvision.models.vgg import VGG16_Weights
 import math
 
 
@@ -25,25 +23,6 @@ class FusionNet(nn.Module):
     def forward(self, x):
         # return self.conv2(x + self.conv1(x))
         return self.conv2(torch.cat([x, self.conv1(x)], dim=1))
-
-
-class Vgg16(nn.Module):
-    def __init__(self, requires_grad=False):
-        super().__init__()
-        # vgg_pretrained_features = models.vgg16(weights='imagenet')
-        # vgg_pretrained_features = models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
-        vgg_pretrained_features = models.vgg16(pretrained=True).features
-        self.module = nn.Sequential()
-
-        for x in range(9):
-            self.module.add_module(str(x), vgg_pretrained_features[x])
-        if not requires_grad:
-            for param in self.parameters():
-                param.requires_grad = False
-
-    def forward(self, x):
-        return self.module(x)
-
 
 class UNet(nn.Module):
     def __init__(self, in_ch, out_ch, conditional_ch=0, num_lvs=4, base_ch=16, final_act='noact'):
@@ -149,6 +128,18 @@ class EtaEncoder(nn.Module):
         return self.seq(torch.cat([self.in_conv(x), x], dim=1))
 
 
+class Patchifier(nn.Module):
+    def __init__(self, in_ch, out_ch=1):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_ch, 64, 32, 32, 0),  # (*, in_ch, 224, 224) --> (*, 64, 7, 7)
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(64, out_ch, 1, 1, 0))
+
+    def forward(self, x):
+        return self.conv(x)
+
+
 class ThetaEncoder(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
@@ -179,46 +170,46 @@ class ThetaEncoder(nn.Module):
         logvar = self.logvar_conv(M)
         return mu, logvar
 
-
-class Patchifier(nn.Module):
-    def __init__(self, in_ch=1, out_ch=128):
-        super().__init__()
-        self.seq = nn.Sequential(
-            nn.Conv2d(in_ch, 64, 32, 32, 0),  # (*, 64, 7, 7)
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(64, 128, 1, 1, 0),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(128, out_ch, 1, 1, 0))
-
-    def forward(self, x):
-        return self.seq(x)
-
-
-class Discriminator(nn.Module):
-    def __init__(self, in_ch=1, out_ch=1):
-        super().__init__()
-        self.seq = nn.Sequential(
-            nn.Conv2d(in_ch, 16, 4, 2, 1),  # (*, 16, 112, 112)
-            nn.InstanceNorm2d(16),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(16, 64, 4, 2, 1),  # (*, 64, 56, 56)
-            nn.InstanceNorm2d(64),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(64, 16, 4, 2, 1),  # (*, 16, 28, 28)
-            nn.InstanceNorm2d(16),
-            nn.LeakyReLU(0.1),
-            nn.Conv2d(16, out_ch, 4, 2, 1)  # (*, out_ch, 14, 14)
-        )
-
-    def forward(self, in_tensor):
-        return self.seq(in_tensor)
+# class ThetaEncoder(nn.Module):
+#     def __init__(self, in_ch, out_ch):
+#         super().__init__()
+#         self.conv = nn.Sequential(
+#             nn.Conv2d(in_ch, 32, 32, 32, 0),  # (*, in_ch, 224, 244) --> (*, 32, 7, 7)
+#             nn.InstanceNorm2d(32),
+#             nn.LeakyReLU(0.1),
+#             nn.Conv2d(32, 64, 1, 1, 0),
+#             # nn.InstanceNorm2d(64),
+#             nn.LeakyReLU(0.1))
+#         self.mu_conv = nn.Sequential(
+#             nn.Conv2d(64, 64, 3, 1, 1),
+#             nn.InstanceNorm2d(64),
+#             nn.LeakyReLU(0.1),
+#             nn.Conv2d(64, out_ch, 7, 7, 0))
+#         self.logvar_conv = nn.Sequential(
+#             nn.Conv2d(64, 64, 3, 1, 1),
+#             nn.InstanceNorm2d(64),
+#             nn.LeakyReLU(0.1),
+#             nn.Conv2d(64, out_ch, 7, 7, 0))
+#
+#     def forward(self, x, patch_shuffle=False):
+#         m = self.conv(x)
+#         if patch_shuffle:
+#             batch_size = m.shape[0]
+#             num_features = m.shape[1]
+#             num_patches_per_dim = m.shape[-1]
+#             m = m.view(batch_size, num_features, -1)[:, :, torch.randperm(num_patches_per_dim ** 2)]
+#             m = m.view(batch_size, num_features, num_patches_per_dim, num_patches_per_dim)
+#         mu = self.mu_conv(m)
+#         logvar = self.logvar_conv(m)
+#         return mu, logvar
 
 
 class AttentionModule(nn.Module):
-    def __init__(self, dim, v_dim=5):
+    def __init__(self, dim, v_ch=5):
         super().__init__()
+        self.temperature = 10.0
         self.dim = dim
-        self.v_dim = v_dim
+        self.v_ch = v_ch
         self.q_fc = nn.Sequential(
             nn.Linear(dim, 128),
             nn.LeakyReLU(0.1),
@@ -234,47 +225,52 @@ class AttentionModule(nn.Module):
 
     def forward(self, q, k, v, modality_dropout=None):
         """
-        * INPUTS
-            - q : torch.Tensor
-                  (batch_size, feature_dim_q, num_q_patches=1)
-            - k : torch.Tensor
-                  (batch_size, feature_dim_k, num_k_patches=1, num_modalities)
-            - v : torch.Tensor
-                  (batch_size, v_dim, 288*288, num_modalities)
+        Attention module for optimal anatomy fusion.
+
+        ===INPUTS===
+        * q: torch.Tensor (batch_size, feature_dim_q, num_q_patches=1)
+            Query variable. In HACA3, query is the concatenation of target \theta and target \eta.
+        * k: torch.Tensor (batch_size, feature_dim_k, num_k_patches=1, num_contrasts=4)
+            Key variable. In HACA3, keys are \theta and \eta's of source images.
+        * v: torch.Tensor (batch_size, self.v_ch=5, num_v_patches=224*224, num_contrasts=4)
+            Value variable. In HACA3, values are multi-channel logits of source images.
+            self.v_ch is the number of \beta channels.
+        * modality_dropout: torch.Tensor (batch_size, num_contrasts=4)
+            Indicates which contrast indexes have been dropped out. 1: if dropped out, 0: if exists.
         """
         batch_size, feature_dim_q, num_q_patches = q.shape
-        _, feature_dim_k, _, num_modalities = k.shape
+        _, feature_dim_k, _, num_contrasts = k.shape
         num_v_patches = v.shape[2]
-        H = int(math.sqrt(num_v_patches))
+        assert (
+                feature_dim_k == feature_dim_q or feature_dim_q == self.feature_dim
+        ), 'Feature dimensions do not match.'
 
-        if feature_dim_q != self.dim or feature_dim_k != self.dim:
-            raise ValueError
-
-        q = q.unsqueeze(-1).permute(0, 2, 3, 1)  # (batch_size, num_q_patches, 1, feature_dim_q)
-        k = k.permute(0, 2, 3, 1)  # (batch_size, num_k_patches, num_modalities, feature_dim_k)
-        v = v.permute(0, 2, 3, 1)  # (batch_size, num_v_patches=288*288, num_modalities, v_dim)
+        # q.shape: (batch_size, num_q_patches=1, 1, feature_dim_q)
+        q = q.reshape(batch_size, feature_dim_q, num_q_patches, 1).permute(0, 2, 3, 1)
+        # k.shape: (batch_size, num_k_patches=1, num_contrasts=4, feature_dim_k)
+        k = k.permute(0, 2, 3, 1)
+        # v.shape: (batch_size, num_v_patches=224*224, num_contrasts=4, v_ch=5)
+        v = v.permute(0, 2, 3, 1)
         q = self.q_fc(q)
-        k = self.k_fc(k).permute(0, 1, 3, 2)  # (batch_size, num_k_patches=1, feature_dim_k, num_modalities)
+        # k.shape: (batch_size, num_k_patches=1, feature_dim_k, num_contrasts=4)
+        k = self.k_fc(k).permute(0, 1, 3, 2)
 
-        dot_prod = (q @ k) * self.scale  # (batch_size, num_q_patches=1, 1, num_modalities)
-        if num_v_patches % num_q_patches:
-            raise ValueError
-        else:
-            interp_factor = int(math.sqrt(num_v_patches // num_q_patches))
+        # dot_prod.shape: (batch_size, num_q_patches=1, 1, num_contrasts=4)
+        dot_prod = (q @ k) * self.scale
+        interpolation_factor = int(math.sqrt(num_v_patches // num_q_patches))
 
-        # (batch_size, H, W, num_modalities)
-        H = int(math.sqrt(num_q_patches))
-        dot_prod = dot_prod.view(batch_size, H, H, num_modalities)
-        dot_prod = dot_prod.repeat(1, interp_factor, interp_factor, 1)
+        q_spatial_dim = int(math.sqrt(num_q_patches))
+        dot_prod = dot_prod.view(batch_size, q_spatial_dim, q_spatial_dim, num_contrasts)
+
+        image_dim = int(math.sqrt(num_v_patches))
+        # dot_prod_interp.shape: (batch_size, image_dim, image_dim, num_contrasts)
+        dot_prod_interp = dot_prod.repeat(1, interpolation_factor, interpolation_factor, 1)
         if modality_dropout is not None:
-            img_dim = dot_prod.shape[1]
-            if len(modality_dropout.shape) == 1:
-                dot_prod = dot_prod - modality_dropout.unsqueeze(0).unsqueeze(0).unsqueeze(0).repeat(1, img_dim, img_dim, 1).detach()
-            else:
-                dot_prod = dot_prod - modality_dropout.unsqueeze(1).unsqueeze(1).repeat(1, img_dim, img_dim, 1).detach()
-        attn = (dot_prod / 20.0).softmax(dim=-1)  # (batch_size, H, H, num_modalities)
-        v = attn.view(batch_size, num_v_patches, 1, num_modalities) @ v  # (batch_size, num_v_patches, 1, v_dim)
-        H = int(math.sqrt(num_v_patches))
-        v = v.view(batch_size, H, H, self.v_dim).permute(0, 3, 1, 2)  # (batch_size, v_dim, H, H)
-        attn = attn.view(batch_size, H, H, num_modalities).permute(0, 3, 1, 2)  # (batch_size, num_modalities, H, H)
-        return v, attn
+            modality_dropout = modality_dropout.view(batch_size, num_contrasts, 1, 1).permute(0, 2, 3, 1)
+            dot_prod_interp = dot_prod_interp - (modality_dropout.repeat(1, image_dim, image_dim, 1).detach() * 1e5)
+
+        attention = (dot_prod_interp / self.temperature).softmax(dim=-1)
+        v = attention.view(batch_size, num_v_patches, 1, num_contrasts) @ v
+        v = v.view(batch_size, image_dim, image_dim, self.v_ch).permute(0, 3, 1, 2)
+        attention = attention.view(batch_size, image_dim, image_dim, num_contrasts).permute(0, 3, 1, 2)
+        return v, attention
