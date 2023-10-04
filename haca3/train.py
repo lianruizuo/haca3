@@ -1,6 +1,6 @@
 import argparse
 import sys
-from modules.model import HACA3
+from .modules.model import HACA3
 
 def main(args=None):
     args = sys.argv[1:] if args is None else args
@@ -38,6 +38,3 @@ def main(args=None):
     # ====== 4. BEGIN TRAINING ======
     haca3.train(epochs=args.epochs)
 
-
-if __name__ == '__main__':
-    main()
