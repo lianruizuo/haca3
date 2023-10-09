@@ -75,8 +75,16 @@ If you use our software, please cite
    ```
 
 #### Example:
-Suppose the task is to harmonize images from ```Site A``` to match the contrast of ```Site B``` T1w images. 
-```Site A``` has T1w, T2w, and FLAIR images. 
+Suppose the task is to harmonize MR images from ```Site A``` to match the contrast of a pre-selected T1w image of 
+```Site B```. As a source site, ```Site A``` has T1w, T2w, and FLAIR images. The files are saved like this:
+```
+├──data_directory
+        ├──site_A_t1w.nii.gz
+        ├──site_A_t2w.nii.gz
+        ├──site_A_flair.nii.gz
+        ├──site_B_t1w.nii.gz
+```
+
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
