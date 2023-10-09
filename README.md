@@ -1,11 +1,11 @@
 # HACA3: A unified approach for multi-site MR image harmonization | [Paper](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
 ## Table of Contents
-1. [Introduction](#Introduction)
+1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
 3. [Installation](#installation)
-4. [Usage--Inference](#usage_inference)
-5. [Usage--Training](#usage_training)
+4. [Usage: Inference](#usage-inference)
+5. [Usage: Training](#usage-training)
 6. [Acknowledgements](#acknoledgements)
 
 ---
@@ -22,7 +22,7 @@ Standard neuroimage preprocessing steps are needed before running HACA3. These p
 
 ## Installation
 
-### Option 1: Install from source using `pip`
+#### Option 1: Install from source using `pip`
 1. Clone the repository:
     ```bash
     git clone https://gitlab.com/iacl/haca3.git 
@@ -38,10 +38,8 @@ Standard neuroimage preprocessing steps are needed before running HACA3. These p
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-### Option 2 (recommended): Run HACA3 through singularity image
+#### Option 2 (recommended): Run HACA3 through singularity image
 1. Download Singularity image of HACA3 from [GoogleDrive].
-2. We have pre-trained weights for HACA3 available from [GoogleDrive]. You can download these network model weights 
-   and directly run HACA3 without a retraining.
 
 ## Usage
 If you use our software, please cite 
@@ -59,7 +57,7 @@ If you use our software, please cite
    Susan M. Resnick and Jerry L. Prince and Aaron Carass}
    }
    ```
-#### Run HACA3 through Singularity image (recommended), 
+#### Run HACA3 through singularity image (recommended), 
 ```bash
    singularity exec --nv -e haca3.sif haca3-test \
    --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
@@ -71,7 +69,7 @@ If you use our software, please cite
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
-#### Example:
+*Example:*
 Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
 `Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
 ```
