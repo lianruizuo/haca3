@@ -63,14 +63,13 @@ If you use our software, please cite
    ```
 #### Run HACA3 through Singularity image (recommended), 
 ```bash
-   singularity exec --nv -e -B /iacl haca3.sif haca3-test \
+   singularity exec --nv -e haca3.sif haca3-test \
    --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
    --in-path [PATH-TO-INPUT-SOURCE-IMAGE-2, IF THERE ARE MULTIPLE SOURCE IMAGES] \
    --target-image [TARGET-IMAGE] \
    --harmonization-model [PRETRAINED-HACA3-MODEL] \
    --fusion-model [PRETRAINED-FUSION-MODEL] \
    --out-path [PATH-TO-HARMONIZED-IMAGE1] \
-   --out-path [PATH-TO-HARMONIZED-IMAGE2, IF THERE ARE MULTIPLE SOURCE IMAGES PROVIDED in --in-path] \
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
@@ -84,6 +83,19 @@ Suppose the task is to harmonize MR images from ```Site A``` to match the contra
         ├──site_A_flair.nii.gz
         └──site_B_t1w.nii.gz
 ```
+The singularity command to run HACA3 is:
+```bash
+   singularity exec --nv -e haca3.sif haca3-test \
+   --in-path data_directory/site_A_t1w.nii.gz \
+   --in-path data_directory/site_A_t2w.nii.gz \
+   --in-path data_directory/site_A_flair.nii.gz \
+   --target-image data_directory/site_B_flair.nii.gz \
+   --harmonization-model [PRETRAINED-HACA3-MODEL] \
+   --fusion-model [PRETRAINED-FUSION-MODEL] \
+   --out-path output_directory/site_A_harmonized_to_site_B_t1w.nii.gz \
+   --intermediate-out-dir output_directory
+```
+The harmonized image and intermediate results will be saved at ```output_directory```.
 
 
 ## Acknowledgements
