@@ -82,7 +82,7 @@ Suppose the task is to harmonize MR images from ```Site A``` to match the contra
         ├──site_A_t1w.nii.gz
         ├──site_A_t2w.nii.gz
         ├──site_A_flair.nii.gz
-        ├──site_B_t1w.nii.gz
+        └──site_B_t1w.nii.gz
 ```
 
 
