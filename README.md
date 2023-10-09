@@ -93,7 +93,7 @@ In this example, the singularity command to run HACA3 tis:
 ```
 The harmonized image and intermediate results will be saved at `output_directory`.
 ```
-<\pre>
+</pre>
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
