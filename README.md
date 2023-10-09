@@ -61,7 +61,7 @@ If you use our software, please cite
    Susan M. Resnick and Jerry L. Prince and Aaron Carass}
    }
    ```
-### Run HACA3 through Singularity image (recommended), 
+#### Run HACA3 through Singularity image (recommended), 
 ```bash
    singularity exec --nv -e -B /iacl haca3.sif haca3-test \
    --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
@@ -75,8 +75,8 @@ If you use our software, please cite
    ```
 
 #### Example:
-Suppose the task is to harmonize images from Site A to match the contrast of Site B T1w images. Site A has T1w, T2w, 
-and FLAIR images. 
+Suppose the task is to harmonize images from ```Site A``` to match the contrast of ```Site B``` T1w images. 
+```Site A``` has T1w, T2w, and FLAIR images. 
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
