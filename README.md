@@ -17,9 +17,7 @@ This page provides usage guidance of HACA3 training and inference.
 
 ## Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
-inhomogeneity correction, registration to MNI template, and super-resolution for 2D acquired scans (optional, but recommended). 
-
---- 
+inhomogeneity correction, registration to MNI template, and super-resolution for 2D acquired scans (optional, but recommended).
 
 ## Installation
 
@@ -36,14 +34,13 @@ inhomogeneity correction, registration to MNI template, and super-resolution for
     ```bash
     pip install . 
     ```
-Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58. 
+Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
 ### Option 2: Run HACA3 through Singularity image (recommended)
-1. Download Singularity image from [GoogleDrive].
-TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
-
----
+1. Download Singularity image of HACA3 from [GoogleDrive].
+2. We have pre-trained weights for HACA3 available from [GoogleDrive]. You can download these network model weights 
+   and directly run HACA3 without a retraining.
 
 ## Usage
 If you use our software, please cite 
