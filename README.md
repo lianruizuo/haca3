@@ -67,7 +67,8 @@ If you use our software, please cite
    --out-path [PATH-TO-HARMONIZED-IMAGE1] \
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
-
+<pre>
+```
 ***Example:***
 Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
 `Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
@@ -78,7 +79,7 @@ Suppose the task is to harmonize MR images from `Site A` to match the contrast o
         ├──site_A_flair.nii.gz
         └──site_B_t1w.nii.gz
 ```
-The singularity command to run HACA3 is:
+In this example, the singularity command to run HACA3 tis:
 ```bash
    singularity exec --nv -e haca3.sif haca3-test \
    --in-path data_directory/site_A_t1w.nii.gz \
@@ -91,7 +92,8 @@ The singularity command to run HACA3 is:
    --intermediate-out-dir output_directory
 ```
 The harmonized image and intermediate results will be saved at `output_directory`.
-
+```
+<\pre>
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
