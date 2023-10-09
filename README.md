@@ -8,7 +8,6 @@
 5. [Usage: Training](#usage-training)
 6. [Acknowledgements](#acknoledgements)
 
----
 
 ## Introduction
 This page provides usage guidance of HACA3 training and inference. HACA3 is an advanced approach for multi-site MRI 
@@ -69,7 +68,7 @@ If you use our software, please cite
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
-*Example:*
+***Example:***
 Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
 `Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
 ```
