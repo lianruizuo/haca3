@@ -2,6 +2,7 @@ import argparse
 import sys
 from .modules.model import HACA3
 
+
 def main(args=None):
     args = sys.argv[1:] if args is None else args
     parser = argparse.ArgumentParser(description='Harmonization with HACA3.')
@@ -37,4 +38,3 @@ def main(args=None):
 
     # ====== 4. BEGIN TRAINING ======
     haca3.train(epochs=args.epochs)
-

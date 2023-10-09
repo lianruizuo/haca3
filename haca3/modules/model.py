@@ -324,7 +324,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 5e-1 * perceptual_loss + 1e-5 * kld_loss + 1e-1 * beta_loss
+        total_loss = 10 * rec_loss + 3e-1 * perceptual_loss + 1e-5 * kld_loss + 3e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
@@ -558,7 +558,8 @@ class HACA3:
                     theta_target = theta_target.mean(dim=0, keepdim=True)
                     eta_target = self.eta_encoder(target_image).mean(dim=0, keepdim=True).view(1, self.eta_dim, 1, 1)
                     thetas_target.append(theta_target)
-                    queries.append(torch.cat([theta_target, eta_target], dim=1).view(1, self.theta_dim+self.eta_dim, 1))
+                    queries.append(
+                        torch.cat([theta_target, eta_target], dim=1).view(1, self.theta_dim + self.eta_dim, 1))
                 if save_intermediate:
                     # save theta and eta of target images
                     with open(intermediate_out_dir / f'{prefix}_targets.txt', 'w') as fp:
@@ -598,14 +599,13 @@ class HACA3:
                                 fp.write(','.join([f'source{i}', f'slice{j:03d}'] +
                                                   ['%.6f' % val for val in slice_key]) + '\n')
 
-
             # ===4. DECODING===
             rec_images, betas_fusion, attentions = [], [], []
             for out_path, theta_target, query, norm_val in zip(out_paths, thetas_target, queries, norm_vals):
                 out_prefix = out_path.name.replace('.nii.gz', '')
                 batch_size = keys[0].shape[0]
-                k = torch.cat(keys, dim=-1).view(batch_size, self.theta_dim+self.eta_dim, 1, len(source_images))
-                v = torch.stack(logits, dim=-1).view(batch_size, self.beta_dim, 224*224, len(source_images))
+                k = torch.cat(keys, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
+                v = torch.stack(logits, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
                 logit_fusion, attention = self.attention_module(query.repeat(batch_size, 1, 1), k, v, None)
                 beta_fusion = self.channel_aggregation(reparameterize_logit(logit_fusion))
                 combined_map = torch.cat([beta_fusion, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
@@ -676,4 +676,3 @@ class HACA3:
         prefix = out_path.name.replace('.nii.gz', '')
         file_name = out_path.parent / f'{prefix}_harmonized_fusion.nii.gz'
         nib.save(img_save, file_name)
-
