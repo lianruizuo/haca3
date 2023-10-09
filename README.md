@@ -61,20 +61,22 @@ If you use our software, please cite
    Susan M. Resnick and Jerry L. Prince and Aaron Carass}
    }
    ```
-To run Singularity image, 
+### Run HACA3 through Singularity image (recommended), 
 ```bash
    singularity exec --nv -e -B /iacl haca3.sif haca3-test \
-   --t1 [SOURCE-T1W] \
-   --t2 [SOURCE-T2W] \
-   --pd [SOURCE-PDW] \
-   --flair [SOURCE-FLAIR] \
+   --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
+   --in-path [PATH-TO-INPUT-SOURCE-IMAGE-2, IF THERE ARE MULTIPLE SOURCE IMAGES] \
    --target-image [TARGET-IMAGE] \
-   --pretrained-harmonization [PRETRAINED-HACA3-MODEL] \
-   --pretrained-fusion [PRETRAINED-FUSION-MODEL] \
-   --out-dir [OUTPUT-DIRECTORY] \
-   --file-name [OUTPUT-FILE-NAME] 
+   --harmonization-model [PRETRAINED-HACA3-MODEL] \
+   --fusion-model [PRETRAINED-FUSION-MODEL] \
+   --out-path [PATH-TO-HARMONIZED-IMAGE1] \
+   --out-path [PATH-TO-HARMONIZED-IMAGE2, IF THERE ARE MULTIPLE SOURCE IMAGES PROVIDED in --in-path] \
+   --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
-TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
+
+#### Example:
+Suppose the task is to harmonize images from Site A to match the contrast of Site B T1w images. Site A has T1w, T2w, 
+and FLAIR images. 
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
