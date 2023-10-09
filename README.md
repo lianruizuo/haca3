@@ -1,23 +1,24 @@
 # HACA3: A unified approach for multi-site MR image harmonization | [Paper](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
 ## Table of Contents
-1. [Introduction](#introduction)
+1. [Introduction](#Introduction)
 2. [Prerequisites](#prerequisites)
 3. [Installation](#installation)
-4. [Usage](#usage)
-5. [License](#license)
+4. [Usage--Inference](#usage_inference)
+5. [Usage--Training](#usage_training)
 6. [Acknowledgements](#acknoledgements)
 
 ---
 
 ## Introduction
-This page provides usage guidance of HACA3 training and inference. 
-
----
+This page provides usage guidance of HACA3 training and inference. HACA3 is an advanced approach for multi-site MRI 
+harmonization. 
 
 ## Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
-inhomogeneity correction, registration to MNI template, and super-resolution for 2D acquired scans (optional, but recommended).
+- inhomogeneity correction
+- registration to MNI space (1mm isotropic)
+- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance.
 
 ## Installation
 
@@ -37,7 +38,7 @@ inhomogeneity correction, registration to MNI template, and super-resolution for
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-### Option 2: Run HACA3 through Singularity image (recommended)
+### Option 2 (recommended): Run HACA3 through singularity image
 1. Download Singularity image of HACA3 from [GoogleDrive].
 2. We have pre-trained weights for HACA3 available from [GoogleDrive]. You can download these network model weights 
    and directly run HACA3 without a retraining.
@@ -71,8 +72,8 @@ If you use our software, please cite
    ```
 
 #### Example:
-Suppose the task is to harmonize MR images from ```Site A``` to match the contrast of a pre-selected T1w image of 
-```Site B```. As a source site, ```Site A``` has T1w, T2w, and FLAIR images. The files are saved like this:
+Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
+`Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
 ```
 ├──data_directory
         ├──site_A_t1w.nii.gz
@@ -92,7 +93,7 @@ The singularity command to run HACA3 is:
    --out-path output_directory/site_A_harmonized_to_site_B_t1w.nii.gz \
    --intermediate-out-dir output_directory
 ```
-The harmonized image and intermediate results will be saved at ```output_directory```.
+The harmonized image and intermediate results will be saved at `output_directory`.
 
 
 ## Acknowledgements
