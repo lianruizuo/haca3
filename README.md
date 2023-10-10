@@ -17,14 +17,15 @@ harmonization.
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
 - inhomogeneity correction
 - registration to MNI space (1mm isotropic)
-- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance.
+- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance. 
+See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI).
 
 ## 3. Installation
 
 #### 3.1 Option 1: Install from source using `pip`
 1. Clone the repository:
     ```bash
-    git clone https://gitlab.com/iacl/haca3.git 
+    git clone https://gitlab.com/lr_zuo/haca3.git 
     ```
 2. Navigate to the directory:
     ```bash
@@ -38,7 +39,9 @@ Package requirements are automatically handled. To see a list of requirements, s
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
 #### 3.2 Option 2 (recommended): Run HACA3 through singularity image
-1. Download Singularity image of HACA3 from [GoogleDrive].
+1. Download singularity image of HACA3 from [JHU-IACL](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
+2. Pretrained HACA3 model weights can be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
+3. Pretrained fusion model weights can be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 
 ## 4. Usage: Inference
 If you use our software, please cite 
@@ -96,15 +99,15 @@ If you use our software, please cite
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
 source images. See the above example for more details.
 - ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
-- ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039) ```theta``` 
+- ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039), ```theta``` 
 is a two-dimensional representation of image contrast. Target image contrast can be directly specified by providing 
 a ```theta``` value, e.g., ```--target-theta 0.5 0.5```.
 - ```--norm-val```: normalization value. 
 - ```--out-path```: file path to harmonized image. 
-- ```--harmonization-model```: pretrained HACA3 weights. Pretrained model weights on IXI, OASIS and HCP data are 
-provided at [GoogleDrive].
+- ```--harmonization-model```: pretrained HACA3 weights. Pretrained model weights on IXI, OASIS and HCP data can 
+be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
 - ```--fusion-model```: pretrained fusion model weights. HACA3 uses a 3D convolutional network to combine multi-orientation
-2D slices into a single 3D volume.
+2D slices into a single 3D volume. Pretrained fusion model can be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 - ```--save-intermediate```: if specified, intermediate results will be saved. Default: ```False```. Action: ```store_true```.
 - ```--intermediate-out-dir```: directory to save intermediate results.
 - ```--gpu-id```: integer number specifies which GPU to run HACA3.
