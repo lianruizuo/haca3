@@ -40,11 +40,11 @@ This model was trained on public datasets including the structural MR images fro
 HACA3 uses a 3D convolutional network to combine multi-orientation 2D slices into a single 3D volume. 
 Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 
-#### 3.1 Option 1: Run HACA3 through singularity image (recommended)
+### 3.1 Option 1 (recommended): Run HACA3 through singularity image
 Generally, no installation of HACA3 is required with this option. 
-Singularity image of HACA3 model can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
+Singularity image of HACA3 model can be directly downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
 
-#### 3.2 Option 2: Install from source using `pip`
+### 3.2 Option 2: Install from source using `pip`
 1. Clone the repository:
     ```bash
     git clone https://github.com/lianruizuo/haca3.git 
@@ -63,8 +63,8 @@ This installs the `haca3` package and creates two CLI aliases `haca3-train` and 
 
 ## 4. Usage: Inference
 
-#### Run HACA3 through singularity image (recommended), 
-```bash
+### 4.1 Option 1 (recommended): Run HACA3 through singularity image
+   ```bash
    singularity exec --nv -e haca3.sif haca3-test \
    --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
    --in-path [PATH-TO-INPUT-SOURCE-IMAGE-2, IF THERE ARE MULTIPLE SOURCE IMAGES] \
@@ -74,6 +74,7 @@ This installs the `haca3` package and creates two CLI aliases `haca3-train` and 
    --out-path [PATH-TO-HARMONIZED-IMAGE] \
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
+Note: if run HACA3 from source, 
 
 - ***Example:***
     Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
@@ -99,7 +100,19 @@ This installs the `haca3` package and creates two CLI aliases `haca3-train` and 
     ```
     The harmonized image and intermediate results will be saved at `output_directory`.
 
-#### All options for inference:
+### 4.2 Option 2: run HACA3 from source after installation
+   ```bash
+   haca3-test \
+   --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
+   --in-path [PATH-TO-INPUT-SOURCE-IMAGE-2, IF THERE ARE MULTIPLE SOURCE IMAGES] \
+   --target-image [TARGET-IMAGE] \
+   --harmonization-model [PRETRAINED-HACA3-MODEL] \
+   --fusion-model [PRETRAINED-FUSION-MODEL] \
+   --out-path [PATH-TO-HARMONIZED-IMAGE] \
+   --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
+   ```
+
+### 4.3 All options for inference:
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
 source images. See the above example for more details.
 - ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
