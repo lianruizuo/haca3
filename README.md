@@ -3,10 +3,26 @@
 This page provides a gentle introduction to HACA3 inference and training. 
 HACA3 is an advanced approach for multi-site MRI harmonization. 
 
-![HACA3 features](figures/GA.png)
+- Publication: [Zuo et al. HACA3: A unified approach for multi-site MR image harmonization. *Computerized Medical Imaging 
+and Graphics, 2023*](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
-[Zuo et al. HACA3: A unified approach for multi-site MR image harmonization. *Computerized Medical Imaging and Graphics
-2023*](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
+- Citation:    
+   ```bibtex
+   @article{ZUO2023102285,
+   title = {HACA3: A unified approach for multi-site MR image harmonization},
+   journal = {Computerized Medical Imaging and Graphics},
+   volume = {109},
+   pages = {102285},
+   year = {2023},
+   issn = {0895-6111},
+   doi = {https://doi.org/10.1016/j.compmedimag.2023.102285},
+   author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and Samuel W. Remedios and 
+   Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
+   Susan M. Resnick and Jerry L. Prince and Aaron Carass}
+   }
+   ```
+
+![HACA3 features](figures/GA.png)
 
 ## 1. Introduction and motivation
 
@@ -22,9 +38,9 @@ See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-
 
 #### 3.1 Option 1: Run HACA3 through singularity image (recommended)
 Generally, no installation is required with this option. 
-1. Download singularity image of HACA3 from [here](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
-2. Pretrained HACA3 weights can be downloaded from [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
-3. Pretrained 3D fusion weights can be downloaded from [here](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
+1. Download singularity image of HACA3 [here](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
+2. Pretrained HACA3 weights can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
+3. Pretrained 3D fusion weights can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 
 #### 3.2 Option 2: Install from source using `pip`
 1. Clone the repository:
@@ -44,21 +60,7 @@ This installs the `haca3` package and creates two CLI aliases `haca3-train` and 
 
 
 ## 4. Usage: Inference
-If you use our software, please cite 
-   ```bibtex
-   @article{ZUO2023102285,
-   title = {HACA3: A unified approach for multi-site MR image harmonization},
-   journal = {Computerized Medical Imaging and Graphics},
-   volume = {109},
-   pages = {102285},
-   year = {2023},
-   issn = {0895-6111},
-   doi = {https://doi.org/10.1016/j.compmedimag.2023.102285},
-   author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and Samuel W. Remedios and 
-   Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
-   Susan M. Resnick and Jerry L. Prince and Aaron Carass}
-   }
-   ```
+
 #### Run HACA3 through singularity image (recommended), 
 ```bash
    singularity exec --nv -e haca3.sif haca3-test \
@@ -67,7 +69,7 @@ If you use our software, please cite
    --target-image [TARGET-IMAGE] \
    --harmonization-model [PRETRAINED-HACA3-MODEL] \
    --fusion-model [PRETRAINED-FUSION-MODEL] \
-   --out-path [PATH-TO-HARMONIZED-IMAGE1] \
+   --out-path [PATH-TO-HARMONIZED-IMAGE] \
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
@@ -105,9 +107,9 @@ a ```theta``` value, e.g., ```--target-theta 0.5 0.5```.
 - ```--norm-val```: normalization value. 
 - ```--out-path```: file path to harmonized image. 
 - ```--harmonization-model```: pretrained HACA3 weights. Pretrained model weights on IXI, OASIS and HCP data can 
-be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
+be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
 - ```--fusion-model```: pretrained fusion model weights. HACA3 uses a 3D convolutional network to combine multi-orientation
-2D slices into a single 3D volume. Pretrained fusion model can be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
+2D slices into a single 3D volume. Pretrained fusion model can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 - ```--save-intermediate```: if specified, intermediate results will be saved. Default: ```False```. Action: ```store_true```.
 - ```--intermediate-out-dir```: directory to save intermediate results.
 - ```--gpu-id```: integer number specifies which GPU to run HACA3.
