@@ -142,7 +142,7 @@ However, this may slightly increase the inference time.
 
 ## 5. Acknowledgements
 
-Special thanks for Samuel Remedios, Blake Dewey, and Yihao Liu for their help and feedbacks while preparing this GitHub page.
+Special thanks to Samuel Remedios, Blake Dewey, and Yihao Liu for their feedbacks on HACA3 code release and this GitHub page.
 
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience (LBN) of NIA and 
 the Image Analysis and Communications Laboratory (IACL) of JHU. 
