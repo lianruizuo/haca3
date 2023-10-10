@@ -3,7 +3,8 @@
 This page provides a gentle introduction to HACA3 inference and training. 
 HACA3 is an advanced approach for multi-site MRI harmonization. 
 
-[Zuo et al. HACA3: A unified approach for multi-site MR image harmonization. CMIG, 2023](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
+[Zuo et al. HACA3: A unified approach for multi-site MR image harmonization. Computerized Medical Imaging and Graphics
+2023](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
 ## 1. Introduction and motivation
 
@@ -17,10 +18,16 @@ See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-
 
 ## 3. Installation
 
-#### 3.1 Option 1: Install from source using `pip`
+#### 3.1 Option 1: Run HACA3 through singularity image (recommended)
+Generally, no installation is required with this option. 
+1. Download singularity image of HACA3 from [here](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
+2. Pretrained HACA3 weights can be downloaded from [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
+3. Pretrained 3D fusion weights can be downloaded from [here](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
+
+#### 3.2 Option 2: Install from source using `pip`
 1. Clone the repository:
     ```bash
-    git clone https://gitlab.com/lr_zuo/haca3.git 
+    git clone https://github.com/lianruizuo/haca3.git 
     ```
 2. Navigate to the directory:
     ```bash
@@ -30,13 +37,9 @@ See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-
     ```bash
     pip install . 
     ```
-Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59. 
+Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-60. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-#### 3.2 Option 2 (recommended): Run HACA3 through singularity image
-1. Download singularity image of HACA3 from [JHU-IACL](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
-2. Pretrained HACA3 model weights can be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
-3. Pretrained fusion model weights can be [downloaded](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 
 ## 4. Usage: Inference
 If you use our software, please cite 
