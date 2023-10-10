@@ -2,8 +2,7 @@
 
 # HACA3: A unified approach for multi-site MR image harmonization | [Paper](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
-HACA3 is an advanced approach for multi-site MRI harmonization.  
-This page provides a gentle introduction to HACA3 inference and training. 
+HACA3 is an advanced approach for multi-site MRI harmonization. This page provides a gentle introduction to HACA3 inference and training. 
 
 - Publication: [Zuo et al. HACA3: A unified approach for multi-site MR image harmonization. *Computerized Medical Imaging 
 and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
