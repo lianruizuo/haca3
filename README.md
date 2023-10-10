@@ -39,7 +39,6 @@ See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-
 Generally, no installation of HACA3 is required with this option. 
 Singularity image of HACA3 model can be directly downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
 
----
 
 ### 3.2 Option 2: Install from source using `pip`
 1. Clone the repository:
@@ -57,7 +56,6 @@ Singularity image of HACA3 model can be directly downloaded [**here**](https://i
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-60. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
----
 
 ### 3.3 Pretrained weights
 Pretrained weights of HACA3 can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt). 
@@ -104,7 +102,6 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
     ```
     The harmonized image and intermediate results will be saved at `output_directory`.
 
----
 
 ### 4.2 Option 2: Run HACA3 from source after installation
    ```bash
@@ -118,7 +115,6 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
----
 
 ### 4.3 All options for inference:
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
