@@ -9,19 +9,19 @@
 6. [Acknowledgements](#acknoledgements)
 
 
-## Introduction
+## 1. Introduction
 This page provides usage guidance of HACA3 training and inference. HACA3 is an advanced approach for multi-site MRI 
 harmonization. 
 
-## Prerequisites 
+## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
 - inhomogeneity correction
 - registration to MNI space (1mm isotropic)
 - (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance.
 
-## Installation
+## 3. Installation
 
-#### Option 1: Install from source using `pip`
+#### 3.1 Option 1: Install from source using `pip`
 1. Clone the repository:
     ```bash
     git clone https://gitlab.com/iacl/haca3.git 
@@ -37,10 +37,10 @@ Standard neuroimage preprocessing steps are needed before running HACA3. These p
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-#### Option 2 (recommended): Run HACA3 through singularity image
+#### 3.2 Option 2 (recommended): Run HACA3 through singularity image
 1. Download Singularity image of HACA3 from [GoogleDrive].
 
-## Usage
+## 4. Usage: Inference
 If you use our software, please cite 
    ```bibtex
    @article{ZUO2023102285,
@@ -68,8 +68,6 @@ If you use our software, please cite
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
-
-
 - ***Example:***
     Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
     `Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
@@ -80,7 +78,7 @@ If you use our software, please cite
         ├──site_A_flair.nii.gz
         └──site_B_t1w.nii.gz
     ```
-    In this example, the singularity command to run HACA3 tis:
+    In this example, the singularity command to run HACA3 is:
     ```bash
        singularity exec --nv -e haca3.sif haca3-test \
        --in-path data_directory/site_A_t1w.nii.gz \
@@ -92,7 +90,11 @@ If you use our software, please cite
        --out-path output_directory/site_A_harmonized_to_site_B_t1w.nii.gz \
        --intermediate-out-dir output_directory
     ```
-The harmonized image and intermediate results will be saved at `output_directory`.
+    The harmonized image and intermediate results will be saved at `output_directory`.
+
+#### All testing options:
+- ```--in-path```: file path to input source image. If there are multiple source images, multiple ```--in-path``` may be provided.
+- ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
 
 
 
