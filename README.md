@@ -6,7 +6,7 @@ This page provides a gentle introduction to HACA3 inference and training.
 HACA3 is an advanced approach for multi-site MRI harmonization. 
 
 - Publication: [Zuo et al. HACA3: A unified approach for multi-site MR image harmonization. *Computerized Medical Imaging 
-and Graphics, 2023*](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
+and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
 - Citation:    
    ```bibtex
@@ -97,7 +97,7 @@ This installs the `haca3` package and creates two CLI aliases `haca3-train` and 
     ```
     The harmonized image and intermediate results will be saved at `output_directory`.
 
-#### All inference phase options:
+#### All options for inference:
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
 source images. See the above example for more details.
 - ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
@@ -118,12 +118,13 @@ GPU memory. For reduced GPU memory consumption, source images maybe divided into
 However, this may slightly increase the inference time.
 
 
-## Acknowledgements
-The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
-the Image Analysis and Communications Laboratory. This work was supported in part by the Intramural Research Program 
-of the National Institutes of Health, National Institute on Aging and in part by the TREAT-MS study funded by 
-the Patient-Centered Outcomes Research Institute (PCORI) grant MS-1610-37115 (Co-PIs: Drs. S.D. Newsome and E.M. Mowry). 
-This material is also partially supported by the National Science Foundation Graduate Research Fellowship under 
-Grant No. DGE-1746891. The work was also funded in part by the NIH grant (R01NS082347, PI: P. Calabresi), 
-National Multiple Sclerosis Society grant (RG-1907-34570, PI: D. Pham), and 
-the DOD/Congressionally Directed Medical Research Programs (CDMRP) grant (MS190131, PI: J. Prince).
+## 5. Acknowledgements
+The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience (LBN) of NIA and 
+the Image Analysis and Communications Laboratory (IACL) of JHU. 
+This work was supported in part by the Intramural Research Program of the National Institutes of Health, 
+National Institute on Aging, 
+in part by the TREAT-MS study funded by the Patient-Centered Outcomes Research Institute (PCORI) grant MS-1610-37115 
+(Co-PIs: Drs. S.D. Newsome and E.M. Mowry), 
+in part by the National Science Foundation Graduate Research Fellowship under Grant No. DGE-1746891, 
+in part by the NIH grant (R01NS082347, PI: P. Calabresi), National Multiple Sclerosis Society grant (RG-1907-34570, PI: D. Pham), 
+and the DOD/Congressionally Directed Medical Research Programs (CDMRP) grant (MS190131, PI: J. Prince).
