@@ -92,10 +92,25 @@ If you use our software, please cite
     ```
     The harmonized image and intermediate results will be saved at `output_directory`.
 
-#### All testing options:
-- ```--in-path```: file path to input source image. If there are multiple source images, multiple ```--in-path``` may be provided.
+#### All inference phase options:
+- ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
+source images. See the above example for more details.
 - ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
-
+- ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039) ```theta``` 
+is a two-dimensional representation of image contrast. Target image contrast can be directly specified by providing 
+a ```theta``` value, e.g., ```--target-theta 0.5 0.5```.
+- ```--norm-val```: normalization value. 
+- ```--out-path```: file path to harmonized image. 
+- ```--harmonization-model```: pretrained HACA3 weights. Pretrained model weights on IXI, OASIS and HCP data are 
+provided at [GoogleDrive].
+- ```--fusion-model```: pretrained fusion model weights. HACA3 uses a 3D convolutional network to combine multi-orientation
+2D slices into a single 3D volume.
+- ```--save-intermediate```: if specified, intermediate results will be saved. Default: ```False```. Action: ```store_true```.
+- ```--intermediate-out-dir```: directory to save intermediate results.
+- ```--gpu-id```: integer number specifies which GPU to run HACA3.
+- ```--num-batches```: During inference, HACA3 takes entire 3D MRI volumes as input. This may cause a considerable amount 
+GPU memory. For reduced GPU memory consumption, source images maybe divided into smaller batches. 
+However, this may slightly increase the inference time.
 
 
 ## Acknowledgements
