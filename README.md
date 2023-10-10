@@ -34,13 +34,6 @@ Standard neuroimage preprocessing steps are needed before running HACA3. These p
 See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI).
 
 ## 3. Installation and pretrained weights
-Pretrained weights of HACA3 can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt). 
-This model was trained on public datasets including the structural MR images from [IXI](https://brain-development.org/ixi-dataset/), 
-[OASIS3](https://www.oasis-brains.org), and [BLSA](https://www.nia.nih.gov/research/labs/blsa) dataset.
-HACA3 uses a 3D convolutional network to combine multi-orientation 2D slices into a single 3D volume. 
-Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
-
----
 
 ### 3.1 Option 1 (recommended): Run HACA3 through singularity image
 Generally, no installation of HACA3 is required with this option. 
@@ -64,6 +57,14 @@ Singularity image of HACA3 model can be directly downloaded [**here**](https://i
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-60. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
+---
+
+### 3.3 Pretrained weights
+Pretrained weights of HACA3 can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt). 
+This model was trained on public datasets including the structural MR images from [IXI](https://brain-development.org/ixi-dataset/), 
+[OASIS3](https://www.oasis-brains.org), and [BLSA](https://www.nia.nih.gov/research/labs/blsa) dataset.
+HACA3 uses a 3D convolutional network to combine multi-orientation 2D slices into a single 3D volume. 
+Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 
 ## 4. Usage: Inference
 
