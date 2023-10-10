@@ -68,7 +68,7 @@ If you use our software, please cite
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
-<div style="border: 1px solid black; padding: 10px; margin: 10px;">
+<div style='border: 1px solid black; padding: 10px; margin: 10px;'>
 
 ***Example:***
 Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
@@ -93,9 +93,7 @@ In this example, the singularity command to run HACA3 tis:
    --intermediate-out-dir output_directory
 ```
 The harmonized image and intermediate results will be saved at `output_directory`.
-
 </div>
-```
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
