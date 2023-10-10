@@ -17,7 +17,8 @@ harmonization.
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
 - inhomogeneity correction
 - registration to MNI space (1mm isotropic)
-- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance.
+- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance. 
+See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI)
 
 ## 3. Installation
 
@@ -96,7 +97,7 @@ If you use our software, please cite
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
 source images. See the above example for more details.
 - ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
-- ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039) ```theta``` 
+- ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039), ```theta``` 
 is a two-dimensional representation of image contrast. Target image contrast can be directly specified by providing 
 a ```theta``` value, e.g., ```--target-theta 0.5 0.5```.
 - ```--norm-val```: normalization value. 
