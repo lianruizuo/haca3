@@ -34,12 +34,13 @@ Standard neuroimage preprocessing steps are needed before running HACA3. These p
 See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI).
 
 ## 3. Installation
+Pretrained weights of HACA3 can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt). 
+HACA3 uses a 3D convolutional network to combine multi-orientation 2D slices into a single 3D volume. 
+Pretrained fusion model can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
 
 #### 3.1 Option 1: Run HACA3 through singularity image (recommended)
-Generally, no installation is required with this option. 
-1. Download singularity image of HACA3 [here](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
-2. Pretrained HACA3 weights can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_public.pt).
-3. Pretrained 3D fusion weights can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/fusion.pt).
+Generally, no installation of HACA3 is required with this option. 
+Singulaarity image of HACA3 model can be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
 
 #### 3.2 Option 2: Install from source using `pip`
 1. Clone the repository:
