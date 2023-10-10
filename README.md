@@ -4,26 +4,24 @@
 1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
 3. [Installation](#installation)
-4. [Usage](#usage)
-5. [License](#license)
+4. [Usage: Inference](#usage-inference)
+5. [Usage: Training](#usage-training)
 6. [Acknowledgements](#acknoledgements)
 
----
 
-## Introduction
-This page provides usage guidance of HACA3 training and inference. 
+## 1. Introduction
+This page provides usage guidance of HACA3 training and inference. HACA3 is an advanced approach for multi-site MRI 
+harmonization. 
 
----
-
-## Prerequisites 
+## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
-inhomogeneity correction, registration to MNI template, and super-resolution for 2D acquired scans (optional, but recommended). 
+- inhomogeneity correction
+- registration to MNI space (1mm isotropic)
+- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance.
 
---- 
+## 3. Installation
 
-## Installation
-
-### Option 1: Install from source using `pip`
+#### 3.1 Option 1: Install from source using `pip`
 1. Clone the repository:
     ```bash
     git clone https://gitlab.com/iacl/haca3.git 
@@ -36,16 +34,13 @@ inhomogeneity correction, registration to MNI template, and super-resolution for
     ```bash
     pip install . 
     ```
-Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-58. 
+Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-59. 
 This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
 
-### Option 2: Run HACA3 through Singularity image (recommended)
-1. Download Singularity image from [GoogleDrive].
-TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
+#### 3.2 Option 2 (recommended): Run HACA3 through singularity image
+1. Download Singularity image of HACA3 from [GoogleDrive].
 
----
-
-## Usage
+## 4. Usage: Inference
 If you use our software, please cite 
    ```bibtex
    @article{ZUO2023102285,
@@ -61,20 +56,62 @@ If you use our software, please cite
    Susan M. Resnick and Jerry L. Prince and Aaron Carass}
    }
    ```
-To run Singularity image, 
+#### Run HACA3 through singularity image (recommended), 
 ```bash
-   singularity exec --nv -e -B /iacl haca3.sif haca3-test \
-   --t1 [SOURCE-T1W] \
-   --t2 [SOURCE-T2W] \
-   --pd [SOURCE-PDW] \
-   --flair [SOURCE-FLAIR] \
+   singularity exec --nv -e haca3.sif haca3-test \
+   --in-path [PATH-TO-INPUT-SOURCE-IMAGE-1] \
+   --in-path [PATH-TO-INPUT-SOURCE-IMAGE-2, IF THERE ARE MULTIPLE SOURCE IMAGES] \
    --target-image [TARGET-IMAGE] \
-   --pretrained-harmonization [PRETRAINED-HACA3-MODEL] \
-   --pretrained-fusion [PRETRAINED-FUSION-MODEL] \
-   --out-dir [OUTPUT-DIRECTORY] \
-   --file-name [OUTPUT-FILE-NAME] 
+   --harmonization-model [PRETRAINED-HACA3-MODEL] \
+   --fusion-model [PRETRAINED-FUSION-MODEL] \
+   --out-path [PATH-TO-HARMONIZED-IMAGE1] \
+   --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
-TODO: singularity command will be changed in later versions. Specifying source contrast names will be no longer needed.
+
+- ***Example:***
+    Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
+    `Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
+    ```
+    ├──data_directory
+        ├──site_A_t1w.nii.gz
+        ├──site_A_t2w.nii.gz
+        ├──site_A_flair.nii.gz
+        └──site_B_t1w.nii.gz
+    ```
+    In this example, the singularity command to run HACA3 is:
+    ```bash
+       singularity exec --nv -e haca3.sif haca3-test \
+       --in-path data_directory/site_A_t1w.nii.gz \
+       --in-path data_directory/site_A_t2w.nii.gz \
+       --in-path data_directory/site_A_flair.nii.gz \
+       --target-image data_directory/site_B_flair.nii.gz \
+       --harmonization-model [PRETRAINED-HACA3-MODEL] \
+       --fusion-model [PRETRAINED-FUSION-MODEL] \
+       --out-path output_directory/site_A_harmonized_to_site_B_t1w.nii.gz \
+       --intermediate-out-dir output_directory
+    ```
+    The harmonized image and intermediate results will be saved at `output_directory`.
+
+#### All inference phase options:
+- ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
+source images. See the above example for more details.
+- ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
+- ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039) ```theta``` 
+is a two-dimensional representation of image contrast. Target image contrast can be directly specified by providing 
+a ```theta``` value, e.g., ```--target-theta 0.5 0.5```.
+- ```--norm-val```: normalization value. 
+- ```--out-path```: file path to harmonized image. 
+- ```--harmonization-model```: pretrained HACA3 weights. Pretrained model weights on IXI, OASIS and HCP data are 
+provided at [GoogleDrive].
+- ```--fusion-model```: pretrained fusion model weights. HACA3 uses a 3D convolutional network to combine multi-orientation
+2D slices into a single 3D volume.
+- ```--save-intermediate```: if specified, intermediate results will be saved. Default: ```False```. Action: ```store_true```.
+- ```--intermediate-out-dir```: directory to save intermediate results.
+- ```--gpu-id```: integer number specifies which GPU to run HACA3.
+- ```--num-batches```: During inference, HACA3 takes entire 3D MRI volumes as input. This may cause a considerable amount 
+GPU memory. For reduced GPU memory consumption, source images maybe divided into smaller batches. 
+However, this may slightly increase the inference time.
+
 
 ## Acknowledgements
 The authors thank BLSA participants, as well as colleagues of the Laboratory of Behavioral Neuroscience and 
