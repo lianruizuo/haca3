@@ -1,3 +1,5 @@
+![HACA3 features](figures/GA.png)
+
 # HACA3: A unified approach for multi-site MR image harmonization | [Paper](https://www.sciencedirect.com/science/article/pii/S0895611123001039)
 
 This page provides a gentle introduction to HACA3 inference and training. 
@@ -21,8 +23,6 @@ and Graphics, 2023*](https://www.sciencedirect.com/science/article/pii/S08956111
    Susan M. Resnick and Jerry L. Prince and Aaron Carass}
    }
    ```
-
-![HACA3 features](figures/GA.png)
 
 ## 1. Introduction and motivation
 
