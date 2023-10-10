@@ -119,10 +119,10 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
 ### 4.3 All options for inference:
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
 source images. See the above example for more details.
-- ```--target-image```: file path to target image. HACA3 will match the source images contrast to this target image.
+- ```--target-image```: file path to target image. HACA3 will match the contrast of source images to this target image.
 - ```--target-theta```: In [HACA3](https://www.sciencedirect.com/science/article/pii/S0895611123001039), ```theta``` 
 is a two-dimensional representation of image contrast. Target image contrast can be directly specified by providing 
-a ```theta``` value, e.g., ```--target-theta 0.5 0.5```. Note: either ```--target-image``` or ```--target-image``` should 
+a ```theta``` value, e.g., ```--target-theta 0.5 0.5```. Note: either ```--target-image``` or ```--target-image``` must 
 be provided during inference. If both are provided, only ```--target-theta``` will be used.
 - ```--norm-val```: normalization value. 
 - ```--out-path```: file path to harmonized image. 
