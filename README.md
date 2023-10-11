@@ -89,15 +89,17 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
         ├──site_A_flair.nii.gz
         └──site_B_t1w.nii.gz
     ```
-    In this example, the singularity command to run HACA3 is:
+    You can always retrain HACA3 on your own datasets. In this example, we choose to use the pretrained HACA3 weights 
+    `harmonization.pt` and fusion model weights `fusion.pt` (see [3.3 Pretrained weights](#33-pretrained-weights) for 
+    how to download these weights). The singularity command to run HACA3 is:
     ```bash
        singularity exec --nv -e haca3.sif haca3-test \
        --in-path data_directory/site_A_t1w.nii.gz \
        --in-path data_directory/site_A_t2w.nii.gz \
        --in-path data_directory/site_A_flair.nii.gz \
        --target-image data_directory/site_B_flair.nii.gz \
-       --harmonization-model [PRETRAINED-HACA3-MODEL] \
-       --fusion-model [PRETRAINED-FUSION-MODEL] \
+       --harmonization-model harmonization.pt \
+       --fusion-model fusion.pt \
        --out-path output_directory/site_A_harmonized_to_site_B_t1w.nii.gz \
        --intermediate-out-dir output_directory
     ```
@@ -113,7 +115,7 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
    --harmonization-model [PRETRAINED-HACA3-MODEL] \
    --fusion-model [PRETRAINED-FUSION-MODEL] \
    --out-path [PATH-TO-HARMONIZED-IMAGE] \
-   --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
+   --intermediate-out-dir [DIRECTORY-THAT-SAVES-INTERMEDIATE-RESULTS] 
    ```
 
 
