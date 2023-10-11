@@ -89,7 +89,7 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
         ├──site_A_flair.nii.gz
         └──site_B_t1w.nii.gz
     ```
-    You can always retrain HACA3 on your own datasets. In this example, we choose to use the pretrained HACA3 weights 
+    You can always retrain HACA3 using your own datasets. In this example, we choose to use the pretrained HACA3 weights 
     `harmonization.pt` and fusion model weights `fusion.pt` (see [3.3 Pretrained weights](#33-pretrained-weights) for 
     how to download these weights). The singularity command to run HACA3 is:
     ```bash
