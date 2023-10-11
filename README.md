@@ -42,7 +42,7 @@ These contrast variations sometimes can be subtle, but often not negligible, esp
 - ***Example #1***: multi-site inconsistency
     ![multi-site harmonization](figures/multi_site.png)
 - ***Example #2***: longitudinal study
-
+    ![longitudinal harmonization](figures/longitudinal.png)
 ## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
 - Inhomogeneity correction
