@@ -41,11 +41,15 @@ These contrast variations sometimes can be subtle, but often not negligible, esp
 ***longitudinal*** studies. 
 - ***Example #1***: multi-site inconsistency
 
-    <img src="figures/multi_site.png" alt="multi-site" width="600"/>
+<div align="center">
+    <img src="figures/multi_site.png" alt="multi-site" width="700"/>
+</div>
 
 - ***Example #2***: longitudinal study
 
-    <img src="figures/longitudinal.png" alt="longitudinal" width="600"/>
+<div align="center">
+    <img src="figures/longitudinal.png" alt="longitudinal" width="700"/>
+</div>
 
 ## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
