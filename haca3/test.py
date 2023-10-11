@@ -7,8 +7,8 @@ import numpy as np
 import torch
 from torchvision.transforms import ToTensor
 
-from .modules.model import HACA3
-from .modules.utils import mkdir_p
+from modules.model import HACA3
+from modules.utils import mkdir_p
 
 
 def obtain_single_image(image_path):

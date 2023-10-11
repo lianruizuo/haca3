@@ -1,6 +1,6 @@
 import argparse
 import sys
-from .modules.model import HACA3
+from modules.model import HACA3
 
 
 def main(args=None):
