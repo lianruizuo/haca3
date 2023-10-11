@@ -28,10 +28,10 @@ and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611
 
 ## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
-- inhomogeneity correction
-- registration to MNI space (1mm isotropic)
-- (optional) super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance. 
-See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI).
+- Inhomogeneity correction
+- Registration to MNI space (1mm isotropic resolution)
+- Super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance. 
+See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI) for more details.
 
 ## 3. Installation and pretrained weights
 
