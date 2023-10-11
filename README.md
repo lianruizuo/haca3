@@ -25,28 +25,33 @@ and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611
     ```
 
 ## 1. Introduction and motivation
-### 1.1 The flexibility and variability in MRI
-The flexibility of magnetic resonance imaging (MRI) has enabled multiple tissue contrasts to be routinely acquired in a single 
-imaging session. For example, T1-weighted, T2-weighed, and FLAIR images are often acquired to better reveal different 
-tissue properties. However, this flexibility of MRI also introduces 
-drawbacks, most notably the ***lack of standardization and consistency*** between imaging studies. Various factors can 
-cause undesired contrast variations in the acquired images. These factors include but not limited to
+### 1.1 The double-edged sword of MRI: flexibility and variability
+Magnetic resonance imaging (MRI) is a powerful imaging technique, offering flexibility in capturing various tissue
+contrasts in a single imaging session. For example, T1-weighted, T2-weighed, and FLAIR images can be acquired in a single
+imaging session to provide comprehensive insights into different tissue properties. However, this flexibility comes at 
+a cost: ***lack of standardization and consistency*** across imaging studies. Several factors contribute to this 
+variability, including but not limited to
 - Pulse sequences, e.g., MPRAGE, SPGR
 - Imaging parameters, e.g., flip angle, TE
 - Scanner manufacturers, e.g, Siemens, GE
-- Technicians and site preference. 
+- Technician and site preferences. 
 
 ### 1.2 Why should we harmonize MR images?
-These contrast variations sometimes can be subtle, but often not negligible, especially in ***multi-site*** and 
-***longitudinal*** studies. 
-- ***Example #1***: multi-site inconsistency
+Contrast variations in MR images may sometimes be subtle but are often significant enough to impact the quality and 
+reliability of ***multi-site*** and ***longitudinal*** studies. 
 
+- ***Example #1***: Multi-site inconsistency. In this example, two images were acquired at different sites using 
+distinct imaging parameters. This led to ***different image contrast for the same subject***. As a result, an automatic 
+segmentation algorithm produced inconsistent outcomes due to these contrast differences. Harmonization effectively 
+alleviates this issue. 
 <div align="center">
-    <img src="figures/multi_site.png" alt="multi-site" width="700"/>
+    <img src="figures/multi_site.png" alt="multi-site" width="650"/>
 </div>
 
-- ***Example #2***: longitudinal study
-
+- ***Example #2***: Longitudinal study. In this example, longitudinal images were acquired during four different visits. 
+During Visit #2, the imaging parameters were altered (due to unexpected reasons), causing a noticeable jump in the 
+estimated volumes of cortical gray matters (GM). Given the cortical GM volume at Visit #3, this jump is unlikely to be 
+a result of actual biological changes. Harmonization makes the longitudinal trend more biological plausible. 
 <div align="center">
     <img src="figures/longitudinal.png" alt="longitudinal" width="700"/>
 </div>
