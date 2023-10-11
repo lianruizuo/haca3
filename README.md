@@ -17,8 +17,9 @@ and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611
     year = {2023},
     issn = {0895-6111},
     doi = {https://doi.org/10.1016/j.compmedimag.2023.102285},
-    author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and Samuel W. Remedios and 
-    Savannah P. Hays and Murat Bilgel and Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
+    author = {Lianrui Zuo and Yihao Liu and Yuan Xue and Blake E. Dewey and
+    Samuel W. Remedios and Savannah P. Hays and Murat Bilgel and 
+    Ellen M. Mowry and Scott D. Newsome and Peter A. Calabresi and 
     Susan M. Resnick and Jerry L. Prince and Aaron Carass}
     }
     ```
