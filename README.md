@@ -41,6 +41,7 @@ These contrast variations sometimes can be subtle, but often not negligible, esp
 ***longitudinal*** studies. 
 - ***Example #1***: multi-site inconsistency
     ![multi-site harmonization](figures/multi_site.png)
+
 - ***Example #2***: longitudinal study
     ![longitudinal harmonization](figures/longitudinal.png)
 ## 2. Prerequisites 
