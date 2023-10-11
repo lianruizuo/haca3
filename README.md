@@ -40,10 +40,13 @@ cause undesired contrast variations in the acquired images. These factors includ
 These contrast variations sometimes can be subtle, but often not negligible, especially in ***multi-site*** and 
 ***longitudinal*** studies. 
 - ***Example #1***: multi-site inconsistency
-    <img src="figures/multi_site.png" alt="multi-site" width="400"/>
+
+    <img src="figures/multi_site.png" alt="multi-site" width="600"/>
 
 - ***Example #2***: longitudinal study
-    ![longitudinal harmonization](figures/longitudinal.png)
+
+    <img src="figures/longitudinal.png" alt="longitudinal" width="600"/>
+
 ## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
 - Inhomogeneity correction
