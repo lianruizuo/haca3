@@ -40,7 +40,7 @@ cause undesired contrast variations in the acquired images. These factors includ
 These contrast variations sometimes can be subtle, but often not negligible, especially in ***multi-site*** and 
 ***longitudinal*** studies. 
 - ***Example #1***: multi-site inconsistency
-    ![multi-site harmonization](figures/multi_site.png)
+    <img src="figures/multi_site.png" alt="multi-site" width="400"/>
 
 - ***Example #2***: longitudinal study
     ![longitudinal harmonization](figures/longitudinal.png)
