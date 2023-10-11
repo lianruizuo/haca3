@@ -25,7 +25,23 @@ and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611
     ```
 
 ## 1. Introduction and motivation
+### 1.1 The flexibility and variability in MRI
+The flexibility of magnetic resonance imaging (MRI) has enabled multiple tissue contrasts to be routinely acquired in a single 
+imaging session. For example, T1-weighted, T2-weighed, and FLAIR images are often acquired to better reveal different 
+tissue properties. However, this flexibility of MRI also introduces 
+drawbacks, most notably the ***lack of standardization and consistency*** between imaging studies. Various factors can 
+cause undesired contrast variations in the acquired images. These factors include but not limited to
+- Pulse sequences, e.g., MPRAGE, SPGR
+- Imaging parameters, e.g., flip angle, TE
+- Scanner manufacturers, e.g, Siemens, GE
+- Technicians and site preference. 
 
+### 1.2 Why should we harmonize MR images?
+These contrast variations sometimes can be subtle, but often not negligible, especially in ***multi-site*** and 
+***longitudinal*** studies. 
+- ***Example #1***: multi-site inconsistency
+    ![multi-site harmonization](figures/multi_site.png)
+- ***Example #2***: longitudinal study
 
 ## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
@@ -79,7 +95,7 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
    --intermediate-out-dir [DIRECTORY SAVES INTERMEDIATE RESULTS] 
    ```
 
-- ***Example:***
+- ***Example #3:***
     Suppose the task is to harmonize MR images from `Site A` to match the contrast of a pre-selected T1w image of 
     `Site B`. As a source site, `Site A` has T1w, T2w, and FLAIR images. The files are saved like this:
     ```
@@ -119,7 +135,7 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
    ```
 
 
-### 4.3 All options for inference:
+### 4.3 All options for inference
 - ```--in-path```: file path to input source image. Multiple ```--in-path``` may be provided if there are multiple 
 source images. See the above example for more details.
 - ```--target-image```: file path to target image. HACA3 will match the contrast of source images to this target image.
