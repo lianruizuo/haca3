@@ -142,6 +142,6 @@ def divide_into_batches(in_tensor, num_batches):
 
 def normalize_intensity(image):
     p99 = np.percentile(image.flatten(), 99)
-    image = np.clip(image, a_min=0.0, a_max=p99)
+    # image = np.clip(image, a_min=0.0, a_max=p99)
     image = image / p99
     return image, p99
