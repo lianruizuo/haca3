@@ -20,6 +20,8 @@ def mkdir_p(path):
 
 
 def reparameterize_logit(logit):
+    import warnings
+    warnings.filterwarnings('ignore', message='.*Mixed memory format inputs detected.*')
     beta = F.gumbel_softmax(logit, tau=1.0, dim=1, hard=True)
     return beta
 
