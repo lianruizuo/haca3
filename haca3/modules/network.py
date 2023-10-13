@@ -207,7 +207,7 @@ class ThetaEncoder(nn.Module):
 class AttentionModule(nn.Module):
     def __init__(self, dim, v_ch=5):
         super().__init__()
-        self.temperature = 10.0
+        self.temperature = 1.0
         self.dim = dim
         self.v_ch = v_ch
         self.q_fc = nn.Sequential(

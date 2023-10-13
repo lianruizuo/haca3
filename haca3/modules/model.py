@@ -162,7 +162,7 @@ class HACA3:
         value_tensor = (torch.arange(0, self.beta_dim) * 1.0).to(self.device)
         value_tensor = value_tensor.view(1, self.beta_dim, 1, 1).repeat(batch_size, 1, image_dim, image_dim)
         beta_label_encode = beta_onehot_encode * value_tensor.detach()
-        return beta_label_encode.sum(1, keepdim=True)
+        return beta_label_encode.sum(1, keepdim=True) / self.beta_dim
 
     def select_available_contrasts(self, image_dicts):
         """
@@ -311,7 +311,7 @@ class HACA3:
 
         """
         # 1. reconstruction loss
-        rec_loss = self.l1_loss(rec_image[mask]**1.5, ref_image[mask]**1.5).mean()
+        rec_loss = self.l1_loss(rec_image[mask], ref_image[mask]).mean()
         perceptual_loss = self.perceptual_loss(rec_image, ref_image).mean()
 
         # 2. KLD loss
@@ -324,7 +324,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 3e-1 * perceptual_loss + 1e-5 * kld_loss + 3e-1 * beta_loss
+        total_loss = 10 * rec_loss + 7e-1 * perceptual_loss + 1e-5 * kld_loss + 1e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()

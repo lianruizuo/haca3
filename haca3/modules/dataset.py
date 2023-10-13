@@ -21,6 +21,13 @@ contrast_names = ['T1PRE', 'T2', 'PD', 'FLAIR']
 def get_tensor_from_fpath(fpath):
     if os.path.exists(fpath):
         image = np.squeeze(nib.load(fpath).get_fdata().astype(np.float32)).transpose([1, 0])
+
+        # pmin = np.min(image.flatten())
+        # image = image - pmin
+        p99 = np.percentile(image.flatten(), 99)
+        image = image / (p99+1e-5)
+        image = np.clip(image, a_min=0.0, a_max=2.0*p99)
+
         image = np.array(default_transform(image))
         image = ToTensor()(image)
     else:
@@ -71,6 +78,6 @@ class HACA3Dataset(Dataset):
                           'image_degrade': image_degrade,
                           'site_id': site_id,
                           'contrast_id': contrast_id,
-                          'exists': 0 if image.mean() > 0.99 else 1}
+                          'exists': 0 if image[0, 0, 0] > 0.9999 else 1}
             image_dicts.append(image_dict)
         return background_removal(image_dicts)
