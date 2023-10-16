@@ -32,7 +32,7 @@ imaging session to provide comprehensive insights into different tissue properti
 a cost: ***lack of standardization and consistency*** across imaging studies. Several factors contribute to this 
 variability, including but not limited to
 - Pulse sequences, e.g., MPRAGE, SPGR
-- Imaging parameters, e.g., flip angle, TE
+- Imaging parameters, e.g., flip angle, echo time
 - Scanner manufacturers, e.g, Siemens, GE
 - Technician and site preferences. 
 
@@ -59,9 +59,9 @@ a result of actual biological changes. Harmonization makes the longitudinal tren
 ## 2. Prerequisites 
 Standard neuroimage preprocessing steps are needed before running HACA3. These preprocessing steps include:
 - Inhomogeneity correction
-- Registration to MNI space (1mm isotropic resolution)
 - Super-resolution for 2D acquired scans. This step is optional, but recommended for optimal performance. 
 See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-images-MRI) for more details.
+- Registration to MNI space (1mm isotropic resolution). HACA3 assumes a spatial dimension of 192*224*192.
 
 ## 3. Installation and pretrained weights
 
@@ -126,7 +126,7 @@ Pretrained fusion model can be downloaded [**here**](https://iacl.ece.jhu.edu/~l
        --in-path data_directory/site_A_t1w.nii.gz \
        --in-path data_directory/site_A_t2w.nii.gz \
        --in-path data_directory/site_A_flair.nii.gz \
-       --target-image data_directory/site_B_flair.nii.gz \
+       --target-image data_directory/site_B_t1w.nii.gz \
        --harmonization-model harmonization.pt \
        --fusion-model fusion.pt \
        --out-path output_directory/site_A_harmonized_to_site_B_t1w.nii.gz \

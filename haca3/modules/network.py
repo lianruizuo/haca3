@@ -207,7 +207,6 @@ class ThetaEncoder(nn.Module):
 class AttentionModule(nn.Module):
     def __init__(self, dim, v_ch=5):
         super().__init__()
-        self.temperature = 1.0
         self.dim = dim
         self.v_ch = v_ch
         self.q_fc = nn.Sequential(
@@ -223,7 +222,7 @@ class AttentionModule(nn.Module):
 
         self.scale = self.dim ** (-0.5)
 
-    def forward(self, q, k, v, modality_dropout=None):
+    def forward(self, q, k, v, modality_dropout=None, temperature=1.0):
         """
         Attention module for optimal anatomy fusion.
 
@@ -269,7 +268,7 @@ class AttentionModule(nn.Module):
             modality_dropout = modality_dropout.view(batch_size, num_contrasts, 1, 1).permute(0, 2, 3, 1)
             dot_prod_interp = dot_prod_interp - (modality_dropout.repeat(1, image_dim, image_dim, 1).detach() * 1e5)
 
-        attention = (dot_prod_interp / self.temperature).softmax(dim=-1)
+        attention = (dot_prod_interp / temperature).softmax(dim=-1)
         v = attention.view(batch_size, num_v_patches, 1, num_contrasts) @ v
         v = v.view(batch_size, image_dim, image_dim, self.v_ch).permute(0, 3, 1, 2)
         attention = attention.view(batch_size, image_dim, image_dim, num_contrasts).permute(0, 3, 1, 2)

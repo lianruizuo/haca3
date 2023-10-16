@@ -57,7 +57,7 @@ def dropout_contrasts(available_contrast_id, contrast_id_to_drop=None):
         available_contrast_ids_per_subject = (available_contrast_id[i] == 1).nonzero(as_tuple=False).squeeze(1)
         num_available_contrasts = available_contrast_ids_per_subject.numel()
         if num_available_contrasts > 1:
-            num_contrast_to_drop = torch.randperm(num_available_contrasts-1)[0]
+            num_contrast_to_drop = torch.randperm(num_available_contrasts - 1)[0]
             contrast_ids_to_drop = torch.randperm(num_available_contrasts)[:num_contrast_to_drop]
             contrast_ids_to_drop = available_contrast_ids_per_subject[contrast_ids_to_drop]
             contrast_id_after_dropout[i, contrast_ids_to_drop] = 0.0
@@ -147,3 +147,21 @@ def normalize_intensity(image):
     # image = np.clip(image, a_min=0.0, a_max=p99)
     image = image / p99
     return image, p99
+
+
+def zero_pad(image, image_dim=256):
+    [n_row, n_col, n_slc] = image.shape
+    image_padded = np.zeros((image_dim, image_dim, image_dim))
+    center_loc = image_dim // 2
+    image_padded[center_loc - n_row // 2: center_loc + n_row - n_row // 2,
+                 center_loc - n_col // 2: center_loc + n_col - n_col // 2,
+                 center_loc - n_slc // 2: center_loc + n_slc - n_slc // 2] = image
+    return image_padded
+
+
+def crop(image, n_row, n_col, n_slc):
+    image_dim = image.shape[0]
+    center_loc = image_dim // 2
+    return image[center_loc - n_row // 2: center_loc + n_row - n_row // 2,
+                 center_loc - n_col // 2: center_loc + n_col - n_col // 2,
+                 center_loc - n_slc // 2: center_loc + n_slc - n_slc // 2]

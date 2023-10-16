@@ -7,16 +7,31 @@ import numpy as np
 import torch
 from torchvision.transforms import ToTensor
 
+from skimage.filters import threshold_otsu
+from skimage.morphology import isotropic_closing
+
 from .modules.model import HACA3
-from .modules.utils import mkdir_p
+from .modules.utils import *
+
+
+def background_removal(image_vol):
+    [n_row, n_col, n_slc] = image_vol.shape
+    thresh = threshold_otsu(image_vol)
+    mask = (image_vol >= thresh) * 1.0
+    mask = zero_pad(mask, 256)
+    mask = isotropic_closing(mask, radius=20)
+    mask = crop(mask, n_row, n_col, n_slc)
+    image_vol[mask < 1e-4] = 0.0
+    return image_vol
 
 
 def obtain_single_image(image_path):
     image_obj = nib.Nifti1Image.from_filename(image_path)
     image_vol = np.array(image_obj.get_fdata().astype(np.float32))
     thresh = np.percentile(image_vol.flatten(), 99)
-    image_vol = np.clip(image_vol, a_min=0.0, a_max=thresh)
     image_vol = image_vol / thresh
+    image_vol = np.clip(image_vol, a_min=0.0, a_max=3.0)
+    image_vol = background_removal(image_vol)
 
     n_row, n_col, n_slc = image_vol.shape
     # zero padding

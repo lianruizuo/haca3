@@ -26,7 +26,7 @@ def get_tensor_from_fpath(fpath):
         # image = image - pmin
         p99 = np.percentile(image.flatten(), 99)
         image = image / (p99+1e-5)
-        image = np.clip(image, a_min=0.0, a_max=2.0*p99)
+        image = np.clip(image, a_min=0.0, a_max=3.0)
 
         image = np.array(default_transform(image))
         image = ToTensor()(image)
