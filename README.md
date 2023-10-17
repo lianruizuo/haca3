@@ -177,6 +177,7 @@ However, this may slightly increase the inference time.
 contrasts of the same underlying anatomy, we use harmonization to identify the optimal operating contrast (OOC) of 
 downstream tasks, e.g., different segmentation algorithms. 
   - Publications:
+  
     [Hays et al. Evaluating the Impact of MR Image Contrast on Whole Brain Segmentation. SPIE 2022.](https://drive.google.com/file/d/1ZxLqJCFORPqhwZCQVM_7r7TwZcn5bbzy/view)
     [Hays et al. Exploring the Optimal Operating MR Contrast for Brain Ventricle Parcellation. MIDL 2023.](https://openreview.net/pdf?id=3ndjE9eawkr)
     [Hays et al. Optimal operating MR contrast for brain ventricle parcellation. ISBI 2023.](https://arxiv.org/pdf/2304.02056)
@@ -190,7 +191,7 @@ levels, we use the HACA3 artifact encoder to do automatic quality assurance.
 significant issues in longitudinal volumetric analysis, and harmonization is a solution to alleviate this issue of inconsistency.
   - Publication:
     [Zuo et al. Inconsistent MR Acquisition in Longitudinal Volumetric Analysis: Impacts and Solutions. CMSC 2023.](https://cmsc.confex.com/cmsc/2023/meetingapp.cgi/Paper/8967)
-  - [Video presentation]https://www.youtube.com/watch?v=TpdB55wxgs4&t=2s
+  - [Video presentation](https://www.youtube.com/watch?v=TpdB55wxgs4&t=2s)
 
 
 ## 6. Acknowledgements
