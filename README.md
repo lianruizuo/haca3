@@ -174,7 +174,7 @@ However, this may slightly increase the inference time.
 
 ## 5. Go further with harmonization 
 - ***Application #1: Identifying optimal operating contrast.*** With the ability of synthesizing arbitrary 
-contrasts of the same underlying anatomy, we use harmonization to identify the optimal operating contrast (OOC) of 
+contrasts of the same underlying anatomy, we use harmonization to identify the optimal operating contrast (OOC) of various
 downstream tasks, e.g., different segmentation algorithms. 
   - Publications:   
     [Hays et al. Evaluating the Impact of MR Image Contrast on Whole Brain Segmentation. SPIE 2022.](https://drive.google.com/file/d/1ZxLqJCFORPqhwZCQVM_7r7TwZcn5bbzy/view)   
@@ -194,11 +194,10 @@ significant issues in longitudinal volumetric analysis, and harmonization is a s
 
 - ***Application #4: Quantifying scanner difference from images.*** In many cases, scanner and acquisition information is 
 not immediately available from NIFTI files. The contrast encoder in HACA3 and our previous harmonization model 
-[CALAMITI](https://www.sciencedirect.com/science/article/pii/S1053811921008429) provides a way to capture these differences
-during acquisition from MR images themselves. This information can be used to inform downstream tasks about the heterogeneity of 
- data acquisition. 
+[CALAMITI](https://www.sciencedirect.com/science/article/pii/S1053811921008429) provides a way to capture these acquisition differences 
+from MR images themselves. This information can be used to inform downstream tasks about the level of data heterogeneity. 
   - Publication:   
-    [Hays et al. Quantifying Contrast Differences Among Magnetic Resonance Images Used in Clinical Studies. CMSC 2023](https://scholar.google.com/citations?view_op=view_citation&hl=en&user=pMxz1VYAAAAJ&citation_for_view=pMxz1VYAAAAJ:qjMakFHDy7sC)
+    [Hays et al. Quantifying Contrast Differences Among Magnetic Resonance Images Used in Clinical Studies. CMSC 2023.](https://scholar.google.com/citations?view_op=view_citation&hl=en&user=pMxz1VYAAAAJ&citation_for_view=pMxz1VYAAAAJ:qjMakFHDy7sC)
 
 
 ## 6. Acknowledgements
