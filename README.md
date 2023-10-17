@@ -51,7 +51,9 @@ alleviates this issue.
 - ***Example #2***: Longitudinal study. In this example, longitudinal images were acquired during four different visits. 
 During Visit #2, the imaging parameters were altered (due to unexpected reasons), causing a noticeable jump in the 
 estimated volumes of cortical gray matters (GM). Given the cortical GM volume at Visit #3, this jump is unlikely to be 
-a result of actual biological changes. Harmonization makes the longitudinal trend more biological plausible. 
+a result of actual biological changes. Harmonization makes the longitudinal trend more biological plausible. See my
+[CMSC2023 talk](https://www.youtube.com/watch?v=TpdB55wxgs4&t=2s) to learn more about how harmonization helps 
+longitudinal study.
 <div align="center">
     <img src="figures/longitudinal.png" alt="longitudinal" width="700"/>
 </div>
