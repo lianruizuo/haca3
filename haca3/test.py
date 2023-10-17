@@ -28,9 +28,9 @@ def background_removal(image_vol):
 def obtain_single_image(image_path):
     image_obj = nib.Nifti1Image.from_filename(image_path)
     image_vol = np.array(image_obj.get_fdata().astype(np.float32))
-    thresh = np.percentile(image_vol.flatten(), 99)
-    image_vol = image_vol / thresh
-    image_vol = np.clip(image_vol, a_min=0.0, a_max=3.0)
+    thresh = np.percentile(image_vol.flatten(), 95)
+    image_vol = image_vol / (thresh + 1e-5)
+    image_vol = np.clip(image_vol, a_min=0.0, a_max=5.0)
     image_vol = background_removal(image_vol)
 
     n_row, n_col, n_slc = image_vol.shape
@@ -200,3 +200,4 @@ def main(args=None):
         decode_img_paths = [out_path.parent / f'{prefix}_harmonized_{orient}.nii.gz'
                             for orient in ['axial', 'coronal', 'sagittal']]
         haca3.combine_images(decode_img_paths, out_path, norm_val, args.fusion_model)
+        

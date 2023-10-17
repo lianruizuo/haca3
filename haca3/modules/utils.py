@@ -98,25 +98,6 @@ class PatchNCELoss(nn.Module):
         return self.ce_loss(predictions, targets).mean()
 
 
-# class PatchNCELoss(nn.Module):
-#     def __init__(self, temperature=1.0):
-#         super().__init__()
-#         self.temperature = temperature
-#
-#     def forward(self, query_feature, positive_feature, negative_feature):
-#         query_feature = F.normalize(query_feature, p=2, dim=1)
-#         positive_feature = F.normalize(positive_feature, p=2, dim=1)
-#         negative_feature = F.normalize(negative_feature, p=2, dim=1)
-#
-#         positive_similarity = torch.sum(query_feature * positive_feature, dim=1) / self.temperature
-#         negative_similarity = torch.matmul(query_feature.permute(0, 2, 1), negative_feature) / self.temperature
-#         negative_similarity, _ = torch.max(negative_similarity, dim=2)
-#
-#         loss = -torch.log(torch.exp(positive_similarity) /
-#                           (torch.exp(positive_similarity + torch.exp(negative_similarity)) + 1e-5))
-#         return loss.mean()
-
-
 class KLDivergenceLoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -143,10 +124,10 @@ def divide_into_batches(in_tensor, num_batches):
 
 
 def normalize_intensity(image):
-    p99 = np.percentile(image.flatten(), 99)
-    # image = np.clip(image, a_min=0.0, a_max=p99)
-    image = image / p99
-    return image, p99
+    thresh = np.percentile(image.flatten(), 95)
+    image = image / (thresh + 1e-5)
+    image = np.clip(image, a_min=0.0, a_max=5.0)
+    return image, thresh
 
 
 def zero_pad(image, image_dim=256):

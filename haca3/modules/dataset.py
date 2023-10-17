@@ -22,11 +22,9 @@ def get_tensor_from_fpath(fpath):
     if os.path.exists(fpath):
         image = np.squeeze(nib.load(fpath).get_fdata().astype(np.float32)).transpose([1, 0])
 
-        # pmin = np.min(image.flatten())
-        # image = image - pmin
-        p99 = np.percentile(image.flatten(), 99)
+        p99 = np.percentile(image.flatten(), 95)
         image = image / (p99+1e-5)
-        image = np.clip(image, a_min=0.0, a_max=3.0)
+        image = np.clip(image, a_min=0.0, a_max=5.0)
 
         image = np.array(default_transform(image))
         image = ToTensor()(image)
