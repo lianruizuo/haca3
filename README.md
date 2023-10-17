@@ -190,7 +190,15 @@ levels, we use the HACA3 artifact encoder to do automatic quality assurance.
 significant issues in longitudinal volumetric analysis, and harmonization is a solution to alleviate this issue of inconsistency.
   - Publication:   
     [Zuo et al. Inconsistent MR Acquisition in Longitudinal Volumetric Analysis: Impacts and Solutions. CMSC 2023.](https://cmsc.confex.com/cmsc/2023/meetingapp.cgi/Paper/8967) 
-  - [Video presentation](https://www.youtube.com/watch?v=TpdB55wxgs4&t=2s)
+  - Video presentation on [YouTube](https://www.youtube.com/watch?v=TpdB55wxgs4&t=2s)
+
+- ***Application #4: Quantifying scanner difference from images.*** In many cases, scanner and acquisition information is 
+not immediately available from NIFTI files. The contrast encoder in HACA3 and our previous harmonization model 
+[CALAMITI](https://www.sciencedirect.com/science/article/pii/S1053811921008429) provides a way to capture these differences
+during acquisition from MR images themselves. This information can be used to inform downstream tasks about the heterogeneity of 
+ data acquisition. 
+  - Publication:   
+    [Hays et al. Quantifying Contrast Differences Among Magnetic Resonance Images Used in Clinical Studies. CMSC 2023](https://scholar.google.com/citations?view_op=view_citation&hl=en&user=pMxz1VYAAAAJ&citation_for_view=pMxz1VYAAAAJ:qjMakFHDy7sC)
 
 
 ## 6. Acknowledgements
