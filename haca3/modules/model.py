@@ -324,7 +324,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 7e-1 * perceptual_loss + 1e-5 * kld_loss + 1e-1 * beta_loss
+        total_loss = 10 * rec_loss + 7e-1 * perceptual_loss + 1e-5 * kld_loss + 3e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
