@@ -537,17 +537,25 @@ class HACA3:
             # === 1. CALCULATE BETA, THETA, ETA FROM SOURCE IMAGES ===
             logits, betas, keys, masks = [], [], [], []
             for source_image in source_images:
-                batch_size = source_image.shape[0]
-                source_image = source_image.unsqueeze(1).to(self.device)
-                mask = (source_image > 1e-6) * 1.0
-                logit = self.beta_encoder(source_image)
-                beta = self.channel_aggregation(reparameterize_logit(logit))
-                theta_source, _ = self.theta_encoder(source_image)
-                eta_source = self.eta_encoder(source_image).view(batch_size, self.eta_dim, 1, 1)
-                masks.append(mask)
-                logits.append(logit)
-                betas.append(beta)
-                keys.append(torch.cat([theta_source, eta_source], dim=1))
+                source_image = source_image.unsqueeze(1)
+                source_image_batches = divide_into_batches(source_image, num_batches)
+                mask_tmp, logit_tmp, beta_tmp, key_tmp = [], [], [], []
+                for source_image_batch in source_image_batches:
+                    batch_size = source_image_batch.shape[0]
+                    source_image_batch = source_image_batch.to(self.device)
+                    mask = (source_image_batch > 1e-6) * 1.0
+                    logit = self.beta_encoder(source_image_batch)
+                    beta = self.channel_aggregation(reparameterize_logit(logit))
+                    theta_source, _ = self.theta_encoder(source_image_batch)
+                    eta_source = self.eta_encoder(source_image_batch).view(batch_size, self.eta_dim, 1, 1)
+                    mask_tmp.append(mask)
+                    logit_tmp.append(logit)
+                    beta_tmp.append(beta)
+                    keys.append(torch.cat([theta_source, eta_source], dim=1))
+                masks.append(torch.cat(mask_tmp, dim=0))
+                logits.append(torch.cat(logit_tmp, dim=0))
+                betas.append(torch.cat(beta_tmp, dim=0))
+                keys.append(torch.cat(key_tmp, dim=0))
 
             # === 2. CALCULATE THETA, ETA FOR TARGET IMAGES (IF NEEDED) ===
             if target_theta is None:
@@ -600,17 +608,29 @@ class HACA3:
                                                   ['%.6f' % val for val in slice_key]) + '\n')
 
             # ===4. DECODING===
-            rec_images, betas_fusion, attentions = [], [], []
             for out_path, theta_target, query, norm_val in zip(out_paths, thetas_target, queries, norm_vals):
                 out_prefix = out_path.name.replace('.nii.gz', '')
-                batch_size = keys[0].shape[0]
-                k = torch.cat(keys, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
-                v = torch.stack(logits, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
-                logit_fusion, attention = self.attention_module(query.repeat(batch_size, 1, 1), k, v, None)
-                beta_fusion = self.channel_aggregation(reparameterize_logit(logit_fusion))
-                combined_map = torch.cat([beta_fusion, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
-                rec_image = self.decoder(combined_map)
-                rec_image = rec_image * masks[0]
+                rec_image, beta_fusion, logit_fusion, attention = [], [], [], []
+                for batch_id in range(num_batches):
+                    keys_tmp = [divide_into_batches(ks, num_batches)[batch_id] for ks in keys]
+                    batch_size = keys_tmp[0].shape[0]
+                    query_tmp = query.view(1, self.theta_dim + self.eta_dim, 1).repeat(batch_size, 1, 1)
+                    k = torch.cat(keys, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
+                    v = torch.stack(logits, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
+                    logit_fusion_tmp, attention_tmp = self.attention_module(query_tmp.repeat(batch_size, 1, 1), k, v, None)
+                    beta_fusion_tmp = self.channel_aggregation(reparameterize_logit(logit_fusion_tmp))
+                    combined_map = torch.cat([beta_fusion_tmp, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
+                    rec_image_tmp = self.decoder(combined_map) * masks[0]
+
+                    rec_image.append(rec_image_tmp)
+                    beta_fusion.append(beta_fusion_tmp)
+                    logit_fusion.append(logit_fusion_tmp)
+                    attention.append(attention_tmp)
+
+                rec_image = torch.cat(rec_image, dim=0)
+                beta_fusion = torch.cat(beta_fusion, dim=0)
+                logit_fusion = torch.cat(logit_fusion, dim=0)
+                attention = torch.cat(attention, dim=0)
 
                 # ===5. SAVE INTERMEDIATE RESULTS (IF REQUESTED)===
                 # harmonized image
