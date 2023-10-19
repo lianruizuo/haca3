@@ -613,10 +613,11 @@ class HACA3:
                 rec_image, beta_fusion, logit_fusion, attention = [], [], [], []
                 for batch_id in range(num_batches):
                     keys_tmp = [divide_into_batches(ks, num_batches)[batch_id] for ks in keys]
+                    logits_tmp = [divide_into_batches(ls, num_batches)[batch_id] for ls in logits]
                     batch_size = keys_tmp[0].shape[0]
                     query_tmp = query.view(1, self.theta_dim + self.eta_dim, 1).repeat(batch_size, 1, 1)
-                    k = torch.cat(keys, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
-                    v = torch.stack(logits, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
+                    k = torch.cat(keys_tmp, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
+                    v = torch.stack(logits_tmp, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
                     logit_fusion_tmp, attention_tmp = self.attention_module(query_tmp.repeat(batch_size, 1, 1), k, v, None)
                     beta_fusion_tmp = self.channel_aggregation(reparameterize_logit(logit_fusion_tmp))
                     combined_map = torch.cat([beta_fusion_tmp, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
