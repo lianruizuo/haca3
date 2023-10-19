@@ -10,4 +10,4 @@ RUN pip install /tmp && rm -rf /tmp
 
 EXPOSE 80
 
-ENTRYPOINT ["python", "../haca3/harmonize.py"]
+ENTRYPOINT ["python", "../haca3/test.py"]
