@@ -311,7 +311,7 @@ class HACA3:
 
         """
         # 1. reconstruction loss
-        rec_loss = self.l1_loss(rec_image[mask], ref_image[mask]).mean()
+        rec_loss = self.l1_loss(rec_image[mask]**1.05, ref_image[mask]**1.05).mean()
         perceptual_loss = self.perceptual_loss(rec_image, ref_image).mean()
 
         # 2. KLD loss
@@ -324,7 +324,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 7e-1 * perceptual_loss + 1e-5 * kld_loss + 3e-1 * beta_loss
+        total_loss = 10 * rec_loss + 3e-1 * perceptual_loss + 1e-5 * kld_loss + 3e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
@@ -620,7 +620,7 @@ class HACA3:
                     img_save = np.array(rec_image.cpu().squeeze().permute(0, 2, 1).flip(2).permute(1, 0, 2))
                 else:
                     img_save = np.array(rec_image.cpu().squeeze().permute(2, 0, 1).flip(2).permute(1, 0, 2))
-                img_save = nib.Nifti1Image((img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96] * norm_val)**1.09, None,
+                img_save = nib.Nifti1Image((img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96]**1.1) * norm_val, None,
                                            header)
                 file_name = out_path.parent / f'{out_prefix}_harmonized_{recon_orientation}.nii.gz'
                 nib.save(img_save, file_name)
