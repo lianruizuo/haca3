@@ -620,7 +620,7 @@ class HACA3:
                     img_save = np.array(rec_image.cpu().squeeze().permute(0, 2, 1).flip(2).permute(1, 0, 2))
                 else:
                     img_save = np.array(rec_image.cpu().squeeze().permute(2, 0, 1).flip(2).permute(1, 0, 2))
-                img_save = nib.Nifti1Image(img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96] * norm_val, None,
+                img_save = nib.Nifti1Image((img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96] * norm_val)**1.1, None,
                                            header)
                 file_name = out_path.parent / f'{out_prefix}_harmonized_{recon_orientation}.nii.gz'
                 nib.save(img_save, file_name)
