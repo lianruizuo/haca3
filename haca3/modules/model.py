@@ -618,7 +618,7 @@ class HACA3:
                     query_tmp = query.view(1, self.theta_dim + self.eta_dim, 1).repeat(batch_size, 1, 1)
                     k = torch.cat(keys_tmp, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
                     v = torch.stack(logits_tmp, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
-                    logit_fusion_tmp, attention_tmp = self.attention_module(query_tmp.repeat(batch_size, 1, 1), k, v, None)
+                    logit_fusion_tmp, attention_tmp = self.attention_module(query_tmp, k, v, None)
                     beta_fusion_tmp = self.channel_aggregation(reparameterize_logit(logit_fusion_tmp))
                     combined_map = torch.cat([beta_fusion_tmp, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
                     rec_image_tmp = self.decoder(combined_map) * masks[0]
