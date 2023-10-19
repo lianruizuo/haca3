@@ -70,7 +70,7 @@ See [SMORE](https://github.com/volcanofly/SMORE-Super-resolution-for-3D-medical-
 
 ### 3.1 Option 1 (recommended): Run HACA3 through singularity image
 In general, no installation of HACA3 is required with this option. 
-Singularity image of HACA3 model can be directly downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_main.sif).
+Singularity image of HACA3 model can be directly downloaded [**here**](https://iacl.ece.jhu.edu/~lianrui/haca3/haca3_v1.0.4.sif).
 
 
 ### 3.2 Option 2: Install from source using `pip`
