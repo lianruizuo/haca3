@@ -15,6 +15,7 @@
     - docker buildx create --use tls-environment
     - docker buildx inspect --bootstrap
   script:
+    - echo "Debug: TAG = $TAG"
     - docker buildx build --build-arg CI_JOB_TOKEN=$CI_JOB_TOKEN --push -t $TAG .
 
 build_tag:
