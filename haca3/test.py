@@ -62,6 +62,8 @@ def main(args=None):
     parser.add_argument('--out-path', type=Path, action='append', required=True)
     parser.add_argument('--harmonization-model', type=Path, required=True)
     parser.add_argument('--fusion-model', type=Path)
+    parser.add_argument('--beta-dim', type=int, default=5)
+    parser.add_argument('--theta-dim', type=int, default=2)
     parser.add_argument('--save-intermediate', action='store_true', default=False)
     parser.add_argument('--intermediate-out-dir', type=Path, default=Path.cwd())
     parser.add_argument('--gpu-id', type=int, default=0)
@@ -115,8 +117,8 @@ def main(args=None):
         mkdir_p(args.intermediate_out_dir)
 
     # ==== INITIALIZE MODEL ====
-    haca3 = HACA3(beta_dim=5,
-                  theta_dim=2,
+    haca3 = HACA3(beta_dim=args.beta_dim,
+                  theta_dim=args.theta_dim,
                   eta_dim=2,
                   pretrained_haca3=args.harmonization_model,
                   gpu_id=args.gpu_id)

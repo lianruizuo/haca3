@@ -18,13 +18,16 @@ degradation_transform = tio.OneOf(transform_dict)
 contrast_names = ['T1PRE', 'T2', 'PD', 'FLAIR']
 
 
-def get_tensor_from_fpath(fpath):
+def get_tensor_from_fpath(fpath, normalization_method):
     if os.path.exists(fpath):
         image = np.squeeze(nib.load(fpath).get_fdata().astype(np.float32)).transpose([1, 0])
 
-        p99 = np.percentile(image.flatten(), 95)
-        image = image / (p99+1e-5)
-        image = np.clip(image, a_min=0.0, a_max=5.0)
+        if normalization_method == 'wm':
+            image = image / 2.0
+        else:
+            p99 = np.percentile(image.flatten(), 95)
+            image = image / (p99 + 1e-5)
+            image = np.clip(image, a_min=0.0, a_max=5.0)
 
         image = np.array(default_transform(image))
         image = ToTensor()(image)
@@ -46,12 +49,13 @@ def background_removal(image_dicts):
 
 
 class HACA3Dataset(Dataset):
-    def __init__(self, dataset_dirs, contrasts, orientations, mode='train'):
+    def __init__(self, dataset_dirs, contrasts, orientations, mode='train', normalization_method='01'):
         self.mode = mode
         self.dataset_dirs = dataset_dirs
         self.contrasts = contrasts
         self.orientations = orientations
         self.t1_paths, self.site_ids = self._get_file_paths()
+        self.normalization_method = normalization_method
 
     def _get_file_paths(self):
         fpaths, site_ids = [], []
@@ -69,7 +73,7 @@ class HACA3Dataset(Dataset):
         image_dicts = []
         for contrast_id, contrast_name in enumerate(contrast_names):
             image_path = self.t1_paths[idx].replace('T1PRE', contrast_name)
-            image = get_tensor_from_fpath(image_path)
+            image = get_tensor_from_fpath(image_path, self.normalization_method)
             image_degrade = degradation_transform(image.unsqueeze(1)).squeeze(1)
             site_id = self.site_ids[idx]
             image_dict = {'image': image,

@@ -13,6 +13,7 @@ def main(args=None):
     parser.add_argument('--beta-dim', type=int, default=5)
     parser.add_argument('--theta-dim', type=int, default=2)
     parser.add_argument('--eta-dim', type=int, default=2)
+    parser.add_argument('--normalization-method', type=str, default='01')
     parser.add_argument('--pretrained-haca3', type=str, default=None)
     parser.add_argument('--pretrained-eta-encoder', type=str, default=None)
     parser.add_argument('--lr', type=float, default=5e-4)
@@ -31,11 +32,10 @@ def main(args=None):
 
     # ====== 2. LOAD DATASETS ======
     haca3.load_dataset(dataset_dirs=args.dataset_dirs, contrasts=args.contrasts, orientations=args.orientations,
-                       batch_size=args.batch_size)
+                       batch_size=args.batch_size, normalization_method=args.normalization_method)
 
     # ====== 3. INITIALIZE TRAINING ======
     haca3.initialize_training(out_dir=args.out_dir, lr=args.lr)
 
     # ====== 4. BEGIN TRAINING ======
     haca3.train(epochs=args.epochs)
-
