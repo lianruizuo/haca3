@@ -69,7 +69,7 @@ class PerceptualLoss(nn.Module):
         super().__init__()
         for param in vgg_model.parameters():
             param.requires_grad = False
-        self.vgg = nn.Sequential(*list(vgg_model.children())[:18]).eval()
+        self.vgg = nn.Sequential(*list(vgg_model.children())[:13]).eval()
 
     def forward(self, x, y):
         if x.shape[1] == 1:

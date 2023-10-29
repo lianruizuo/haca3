@@ -240,7 +240,8 @@ class HACA3:
 
         if contrast_dropout:
             available_contrast_id = dropout_contrasts(available_contrast_id, contrast_id_to_drop)
-        logit_fusion, attention = self.attention_module(q, k, v, modality_dropout=1 - available_contrast_id)
+        logit_fusion, attention = self.attention_module(q, k, v, modality_dropout=1 - available_contrast_id,
+                                                        temperature=10.0)
         beta_fusion = self.channel_aggregation(reparameterize_logit(logit_fusion))
         combined_map = torch.cat([beta_fusion, target_theta.repeat(1, 1, image_dim, image_dim)], dim=1)
         rec_image = self.decoder(combined_map) * mask
@@ -324,7 +325,7 @@ class HACA3:
         beta_loss = self.contrastive_loss(query_feature, positive_feature.detach(), negative_feature.detach())
 
         # COMBINE LOSSES
-        total_loss = 10 * rec_loss + 7e-1 * perceptual_loss + 1e-5 * kld_loss + 5e-1 * beta_loss
+        total_loss = 10 * rec_loss + 5e-1 * perceptual_loss + 1e-5 * kld_loss + 5e-1 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
             total_loss.backward()
@@ -343,10 +344,10 @@ class HACA3:
         eta_loss = self.l1_loss(eta_rec, eta_ref).mean()
         beta_loss = self.l1_loss(beta_rec, beta_ref).mean()
 
-        cycle_loss = theta_loss + eta_loss + 1e-1 * beta_loss
+        cycle_loss = theta_loss + eta_loss + 5e-2 * beta_loss
         if is_train:
             self.optimizer.zero_grad()
-            (1e-2 * cycle_loss).backward()
+            (5e-2 * cycle_loss).backward()
             self.optimizer.step()
             self.scheduler.step()
         loss = {'theta_cyc': theta_loss.item(),
@@ -406,7 +407,7 @@ class HACA3:
         eta_target = self.calculate_eta(target_image)
         query = torch.cat([theta_target, eta_target], dim=1)
         keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
-        if epoch <= 2 or torch.rand((1,)) > 0.3:
+        if torch.rand((1,)) > 0.2:
             contrast_id_to_drop = contrast_id_for_decoding
         else:
             contrast_id_to_drop = None
@@ -438,7 +439,7 @@ class HACA3:
             keys = [torch.cat([theta, eta], dim=1) for (theta, eta) in zip(thetas_source, etas_source)]
             rec_image, attention, logit_fusion, beta_fusion = self.decode(logits, theta_target, query, keys,
                                                                           available_contrast_id, mask,
-                                                                          contrast_dropout=False)
+                                                                          contrast_dropout=True)
             theta_recon, _ = self.theta_encoder(rec_image)
             eta_recon = self.eta_encoder(rec_image)
             beta_recon = self.channel_aggregation(reparameterize_logit(self.beta_encoder(rec_image)))
@@ -619,7 +620,7 @@ class HACA3:
                     query_tmp = query.view(1, self.theta_dim + self.eta_dim, 1).repeat(batch_size, 1, 1)
                     k = torch.cat(keys_tmp, dim=-1).view(batch_size, self.theta_dim + self.eta_dim, 1, len(source_images))
                     v = torch.stack(logits_tmp, dim=-1).view(batch_size, self.beta_dim, 224 * 224, len(source_images))
-                    logit_fusion_tmp, attention_tmp = self.attention_module(query_tmp, k, v, None)
+                    logit_fusion_tmp, attention_tmp = self.attention_module(query_tmp, k, v, None, 5.0)
                     beta_fusion_tmp = self.channel_aggregation(reparameterize_logit(logit_fusion_tmp))
                     combined_map = torch.cat([beta_fusion_tmp, theta_target.repeat(batch_size, 1, 224, 224)], dim=1)
                     rec_image_tmp = self.decoder(combined_map) * masks_tmp[0]

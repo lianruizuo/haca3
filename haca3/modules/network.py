@@ -222,7 +222,7 @@ class AttentionModule(nn.Module):
 
         self.scale = self.dim ** (-0.5)
 
-    def forward(self, q, k, v, modality_dropout=None, temperature=1.0):
+    def forward(self, q, k, v, modality_dropout=None, temperature=10.0):
         """
         Attention module for optimal anatomy fusion.
 
