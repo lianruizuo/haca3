@@ -11,6 +11,7 @@ import torchvision.models as models
 from torchvision.transforms import ToTensor
 from datetime import datetime
 import nibabel as nib
+from torch.cuda.amp import autocast
 
 from .utils import *
 from .dataset import HACA3Dataset
@@ -684,10 +685,12 @@ class HACA3:
             fusion_net = FusionNet(in_ch=3, out_ch=1)
             fusion_net.load_state_dict(checkpoint['fusion_net'])
             fusion_net.to(self.device)
-            image = torch.cat(
-                [ToTensor()(im).permute(2, 1, 0).permute(2, 0, 1).unsqueeze(0).unsqueeze(0) for im in images],
-                dim=1).to(self.device)
-            image_fusion = fusion_net(image).squeeze().detach().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
+            fusion_net.eval()
+            with autocast():
+                image = torch.cat(
+                    [ToTensor()(im).permute(2, 1, 0).permute(2, 0, 1).unsqueeze(0).unsqueeze(0) for im in images],
+                    dim=1).to(self.device)
+                image_fusion = fusion_net(image).squeeze().detach().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
         else:
             # calculate median
             image_cat = np.stack(images, axis=-1)
