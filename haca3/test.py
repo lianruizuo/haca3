@@ -25,13 +25,14 @@ def background_removal(image_vol):
     return image_vol
 
 
-def obtain_single_image(image_path):
+def obtain_single_image(image_path, bg_removal=True):
     image_obj = nib.Nifti1Image.from_filename(image_path)
     image_vol = np.array(image_obj.get_fdata().astype(np.float32))
     thresh = np.percentile(image_vol.flatten(), 95)
     image_vol = image_vol / (thresh + 1e-5)
     image_vol = np.clip(image_vol, a_min=0.0, a_max=5.0)
-    image_vol = background_removal(image_vol)
+    if bg_removal:
+        image_vol = background_removal(image_vol)
 
     n_row, n_col, n_slc = image_vol.shape
     # zero padding
@@ -42,11 +43,11 @@ def obtain_single_image(image_path):
     return ToTensor()(image_padded), image_obj.header, thresh
 
 
-def load_source_images(image_paths):
+def load_source_images(image_paths, bg_removal=True):
     source_images = []
     image_header = None
     for image_path in image_paths:
-        image_vol, image_header, _ = obtain_single_image(image_path)
+        image_vol, image_header, _ = obtain_single_image(image_path, bg_removal)
         source_images.append(image_vol.float().permute(2, 1, 0))
     return source_images, image_header
 
@@ -66,6 +67,7 @@ def main(args=None):
     parser.add_argument('--theta-dim', type=int, default=2)
     parser.add_argument('--save-intermediate', action='store_true', default=False)
     parser.add_argument('--intermediate-out-dir', type=Path, default=Path.cwd())
+    parser.add_argument('--no-bg-removal', dest='bg_removal', action='store_false', default=True)
     parser.add_argument('--gpu-id', type=int, default=0)
     parser.add_argument('--num-batches', type=int, default=4)
 
@@ -124,13 +126,13 @@ def main(args=None):
                   gpu_id=args.gpu_id)
 
     # ==== LOAD SOURCE IMAGES ====
-    source_images, image_header = load_source_images(args.in_path)
+    source_images, image_header = load_source_images(args.in_path, args.bg_removal)
 
     # ==== LOAD TARGET IMAGES IF PROVIDED ====
     if len(args.target_image) > 0:
         target_images, norm_vals = [], []
         for target_image_path, out_path in zip(args.target_image, args.out_path):
-            target_image_tmp, tmp_header, norm_val = obtain_single_image(target_image_path)
+            target_image_tmp, tmp_header, norm_val = obtain_single_image(target_image_path, args.bg_removal)
             target_images.append(target_image_tmp.permute(2, 1, 0).permute(0, 2, 1).flip(1)[100:120, ...])
             norm_vals.append(norm_val)
             if args.save_intermediate:
