@@ -23,7 +23,7 @@ class HACA3:
         self.beta_dim = beta_dim
         self.theta_dim = theta_dim
         self.eta_dim = eta_dim
-        self.device = torch.device(f'cuda:{gpu_id}')
+        self.device = torch.device(f'cuda:{gpu_id}' if torch.cuda.is_available() else 'cpu')
         self.timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
         self.train_loader, self.valid_loader = None, None
