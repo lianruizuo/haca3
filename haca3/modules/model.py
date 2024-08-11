@@ -672,7 +672,7 @@ class HACA3:
                         file_name = intermediate_out_dir / f'{out_prefix}_attention.nii.gz'
                         nib.save(img_save, file_name)
         if header is None:
-            return rec_image
+            return rec_image.cpu().squeeze()
 
     def combine_images(self, image_paths, out_path, norm_val, pretrained_fusion=None):
         # obtain images
