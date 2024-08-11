@@ -525,8 +525,9 @@ class HACA3:
 
     def harmonize(self, source_images, target_images, target_theta, target_eta, out_paths,
                   recon_orientation, norm_vals, header=None, num_batches=4, save_intermediate=False, intermediate_out_dir=None):
-        for out_path in out_paths:
-            mkdir_p(out_path.parent)
+        if out_paths is not None:
+            for out_path in out_paths:
+                mkdir_p(out_path.parent)
         if save_intermediate:
             mkdir_p(intermediate_out_dir)
         prefix = out_paths[0].name.replace('.nii.gz', '')
