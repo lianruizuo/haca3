@@ -24,6 +24,15 @@ def background_removal(image_vol):
     image_vol[mask < 1e-4] = 0.0
     return image_vol
 
+def background_removal2d(image_vol):
+    [n_row, n_col] = image_vol.shape
+    thresh = threshold_otsu(image_vol)
+    mask = (image_vol >= thresh) * 1.0
+    mask = zero_pad2d(mask, 256)
+    mask = isotropic_closing(mask, radius=20)
+    mask = crop2d(mask, n_row, n_col)
+    image_vol[mask < 1e-4] = 0.0
+    return image_vol
 
 def obtain_single_image(image_path, bg_removal=True):
     image_obj = nib.Nifti1Image.from_filename(image_path)
