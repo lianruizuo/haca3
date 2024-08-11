@@ -530,7 +530,8 @@ class HACA3:
                 mkdir_p(out_path.parent)
         if save_intermediate:
             mkdir_p(intermediate_out_dir)
-        prefix = out_paths[0].name.replace('.nii.gz', '')
+        if our_paths is not None:
+            prefix = out_paths[0].name.replace('.nii.gz', '')
         with torch.set_grad_enabled(False):
             self.beta_encoder.eval()
             self.theta_encoder.eval()
