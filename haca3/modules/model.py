@@ -523,8 +523,8 @@ class HACA3:
                 for batch_id, image_dicts in enumerate(self.valid_loader):
                     self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='valid')
 
-    def harmonize(self, source_images, target_images, target_theta, target_eta, out_paths, header,
-                  recon_orientation, norm_vals, num_batches=4, save_intermediate=False, intermediate_out_dir=None):
+    def harmonize(self, source_images, target_images, target_theta, target_eta, out_paths,
+                  recon_orientation, norm_vals, header=None, num_batches=4, save_intermediate=False, intermediate_out_dir=None):
         for out_path in out_paths:
             mkdir_p(out_path.parent)
         if save_intermediate:
@@ -585,7 +585,7 @@ class HACA3:
                                               target_eta_tmp.view(1, self.eta_dim, 1).to(self.device)], dim=1))
 
             # === 3. SAVE ENCODED VARIABLES (IF REQUESTED) ===
-            if save_intermediate:
+            if save_intermediate and header is not None:
                 if recon_orientation == 'axial':
                     # 3a. source images
                     for i, source_img in enumerate(source_images):
@@ -640,18 +640,19 @@ class HACA3:
 
                 # ===5. SAVE INTERMEDIATE RESULTS (IF REQUESTED)===
                 # harmonized image
-                if recon_orientation == "axial":
-                    img_save = np.array(rec_image.cpu().squeeze().permute(1, 2, 0).permute(1, 0, 2))
-                elif recon_orientation == "coronal":
-                    img_save = np.array(rec_image.cpu().squeeze().permute(0, 2, 1).flip(2).permute(1, 0, 2))
-                else:
-                    img_save = np.array(rec_image.cpu().squeeze().permute(2, 0, 1).flip(2).permute(1, 0, 2))
-                img_save = nib.Nifti1Image((img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96]) * norm_val, None,
-                                           header)
-                file_name = out_path.parent / f'{out_prefix}_harmonized_{recon_orientation}.nii.gz'
-                nib.save(img_save, file_name)
+                if header is not None:
+                    if recon_orientation == "axial":
+                        img_save = np.array(rec_image.cpu().squeeze().permute(1, 2, 0).permute(1, 0, 2))
+                    elif recon_orientation == "coronal":
+                        img_save = np.array(rec_image.cpu().squeeze().permute(0, 2, 1).flip(2).permute(1, 0, 2))
+                    else:
+                        img_save = np.array(rec_image.cpu().squeeze().permute(2, 0, 1).flip(2).permute(1, 0, 2))
+                    img_save = nib.Nifti1Image((img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96]) * norm_val, None,
+                                               header)
+                    file_name = out_path.parent / f'{out_prefix}_harmonized_{recon_orientation}.nii.gz'
+                    nib.save(img_save, file_name)
 
-                if save_intermediate:
+                if save_intermediate and header is not None:
                     # 5a. beta fusion
                     if recon_orientation == 'axial':
                         img_save = beta_fusion.squeeze().permute(1, 2, 0).permute(1, 0, 2).cpu().numpy()
@@ -670,6 +671,8 @@ class HACA3:
                         img_save = nib.Nifti1Image(img_save[112 - 96:112 + 96, :, 112 - 96:112 + 96], None, header)
                         file_name = intermediate_out_dir / f'{out_prefix}_attention.nii.gz'
                         nib.save(img_save, file_name)
+        if header is None:
+            return rec_image
 
     def combine_images(self, image_paths, out_path, norm_val, pretrained_fusion=None):
         # obtain images
