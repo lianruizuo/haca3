@@ -614,7 +614,7 @@ class HACA3:
                                                   ['%.6f' % val for val in slice_key]) + '\n')
 
             # ===4. DECODING===
-            for tid, theta_target, query, norm_val in enumerate(zip(thetas_target, queries, norm_vals)):
+            for tid, (theta_target, query, norm_val) in enumerate(zip(thetas_target, queries, norm_vals)):
                 if out_paths is not None:
                     out_prefix = out_paths[tid].name.replace('.nii.gz', '')
                 rec_image, beta_fusion, logit_fusion, attention = [], [], [], []
