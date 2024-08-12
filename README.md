@@ -24,6 +24,9 @@ and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611
     }
     ```
 
+### <img src="https://raw.githubusercontent.com/iampavangandhi/iampavangandhi/master/gifs/Hi.gif" width="30">Recent Updates
+- August 11, 2024 - **An [interactive demo](https://colab.research.google.com/drive/1PeBuqOAGupLQ2gXWVneX1Kn31ISh4oFB?authuser=1#scrollTo=ujYSa4sBBKVA) for HACA3 now available.** You can explore HACA3 harmonization and imputation real time.
+
 ## 1. Introduction and motivation
 ### 1.1 The double-edged sword of MRI: flexibility and variability
 Magnetic resonance imaging (MRI) is a powerful imaging technique, offering flexibility in capturing various tissue
