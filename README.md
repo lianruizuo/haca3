@@ -23,8 +23,9 @@ and Graphics, 2023.*](https://www.sciencedirect.com/science/article/pii/S0895611
               Susan M. Resnick and Jerry L. Prince and Aaron Carass}
     }
     ```
-
 ### <img src="https://raw.githubusercontent.com/iampavangandhi/iampavangandhi/master/gifs/Hi.gif" width="30">Recent Updates
+- April 9, 2026 - **[HACA3+](https://github.com/shays15/haca3-plus) is available.** This model includes ✅ Improved artifact-aware encoding ✅ Foreground/background-aware attention ✅ Training on 100+ scanners from 64 sites
+
 - August 11, 2024 - **An [interactive demo](https://colab.research.google.com/drive/1PeBuqOAGupLQ2gXWVneX1Kn31ISh4oFB?usp=share_link) for HACA3 now available.** You can explore HACA3 harmonization and imputation real time.
 
 ## 1. Introduction and motivation
