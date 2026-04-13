@@ -523,6 +523,7 @@ class HACA3:
                 for batch_id, image_dicts in enumerate(self.valid_loader):
                     self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='valid')
 
+    @torch.inference_mode()
     def harmonize(self, source_images, target_images, target_theta, target_eta, out_paths,
                   recon_orientation, norm_vals, header=None, num_batches=4, save_intermediate=False, intermediate_out_dir=None):
         if out_paths is not None:
@@ -677,6 +678,7 @@ class HACA3:
         if header is None:
             return rec_image.cpu().squeeze()
 
+    @torch.inference_mode()
     def combine_images(self, image_paths, out_path, norm_val, pretrained_fusion=None):
         # obtain images
         images = []
