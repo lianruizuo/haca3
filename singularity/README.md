@@ -10,8 +10,7 @@ changed).
 - `build_singularity.sh` — convenience wrapper around `singularity build`.
 
 ## Requirements
-- A **Linux** machine with **sudo** access (macOS cannot build Singularity
-  images natively).
+- A **Linux** machine (macOS cannot build Singularity images natively).
 - **Singularity** or **Apptainer** installed (the script auto-detects either).
 - Internet access (to pull the PyTorch base image and pip dependencies).
 
@@ -19,17 +18,38 @@ changed).
 From the repository root, after pulling the branch you want to package:
 
 ```bash
-sudo bash singularity/build_singularity.sh
+bash singularity/build_singularity.sh
 ```
+
+By default this does a **rootless `--fakeroot` build** (no `sudo`). This is the
+mode that works when the repo lives on **root-squashed network storage** (e.g. a
+cluster/NFS path like `/valiant02/...`), where a `sudo` build fails with
+`Permission denied` because the root user is mapped to "nobody" and cannot read
+your files.
 
 This writes `haca3.sif` to the repo root. To choose a different output path:
 
 ```bash
-sudo bash singularity/build_singularity.sh /data/images/haca3_encode.sif
+bash singularity/build_singularity.sh /data/images/haca3_encode.sif
 ```
 
 The image is built from your **local checkout**, so make sure the code you want
 is checked out before building.
+
+### If `--fakeroot` is not available at your site
+Some sites disable unprivileged user namespaces. In that case, copy the repo to
+**local disk** (which root *can* read) and build there with `sudo`:
+
+```bash
+cp -a /path/to/haca3 /tmp/haca3-build
+cd /tmp/haca3-build
+HACA3_BUILD_MODE=sudo bash singularity/build_singularity.sh /tmp/haca3.sif
+mv /tmp/haca3.sif /path/to/haca3/haca3.sif
+```
+
+> Do **not** run `sudo bash singularity/build_singularity.sh` directly from
+> root-squashed NFS — the build reads your source as root and will fail with
+> `Permission denied`.
 
 ## Verify
 ```bash
