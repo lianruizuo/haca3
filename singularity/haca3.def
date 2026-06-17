@@ -1,0 +1,48 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+
+# HACA3 Singularity/Apptainer image.
+#
+# This mirrors the project Dockerfile (same PyTorch base, same `pip install .`),
+# so it provides the full, unchanged HACA3 functionality PLUS the new
+# theta-only encoder CLI `haca3-encode`. No other behavior is changed.
+#
+# Build with:  sudo bash singularity/build_singularity.sh
+# (see singularity/README.md)
+
+%files
+    # Copied relative to the directory where `singularity build` is run, which
+    # the build script sets to the repo root (the folder containing setup.py).
+    . /opt/haca3-src
+
+%post
+    set -e
+    apt-get update && apt-get install -y --no-install-recommends git
+    rm -rf /var/lib/apt/lists/*
+    # Install the package (registers haca3-train, haca3-test, haca3-encode).
+    # The .git copied above lets miniver resolve the version at install time.
+    pip install --no-cache-dir /opt/haca3-src
+    # Keep the image lean: drop the source tree after installation.
+    rm -rf /opt/haca3-src
+
+%labels
+    Application HACA3
+    Description Multi-site MR image harmonization (includes haca3-encode theta-only encoder)
+
+%help
+    HACA3 Singularity image.
+
+    Available commands (run with `singularity exec`):
+      haca3-train    train a HACA3 model
+      haca3-test     harmonize images (full pipeline)
+      haca3-encode   encode the contrast representation (theta) only, no harmonization
+
+    Example (theta encoding):
+      singularity exec --nv haca3.sif haca3-encode \
+        --in-path image.nii.gz \
+        --harmonization-model harmonization.pt \
+        --out-dir theta_out/
+
+%runscript
+    cat /.singularity.d/runscript.help 2>/dev/null || \
+        echo "Use 'singularity exec <image> haca3-encode|haca3-test|haca3-train ...'."
