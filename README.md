@@ -94,7 +94,7 @@ Singularity image of HACA3 model can be directly downloaded [**here**](https://i
     pip install . 
     ```
 Package requirements are automatically handled. To see a list of requirements, see `setup.py` L50-60. 
-This installs the `haca3` package and creates two CLI aliases `haca3-train` and `haca3-test`.
+This installs the `haca3` package and creates three CLI aliases `haca3-train`, `haca3-test`, and `haca3-encode`.
 
 
 ### 3.3 Pretrained weights
