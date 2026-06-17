@@ -523,6 +523,38 @@ class HACA3:
                 for batch_id, image_dicts in enumerate(self.valid_loader):
                     self.image_to_image_translation(batch_id, epoch, image_dicts, train_or_valid='valid')
 
+    def encode_theta(self, source_image, num_batches=4):
+        """
+        Encode the contrast representation (theta) of a single image volume. Inference only.
+
+        Unlike ``harmonize``, this performs no decoding or fusion: it simply runs the theta
+        encoder as a feature extractor. The deterministic posterior mean (mu) is returned
+        rather than a reparameterized sample, so the representation is reproducible.
+
+        ===INPUTS===
+        * source_image: torch.Tensor (num_slices, 224, 224)
+            A single image volume arranged as a stack of 2D slices (e.g., axial).
+        * num_batches: int
+            Number of batches to split the slices into, to limit GPU memory usage.
+
+        ===OUTPUTS===
+        * theta: torch.Tensor (num_slices, self.theta_dim)
+            Contrast code (mu) for each slice.
+        * foreground: torch.Tensor (num_slices,)
+            Fraction of non-background pixels in each slice. Useful for averaging theta over
+            slices that actually contain anatomy.
+        """
+        self.theta_encoder.eval()
+        thetas, foreground = [], []
+        with torch.set_grad_enabled(False):
+            image = source_image.unsqueeze(1)  # (num_slices, 1, 224, 224)
+            for image_batch in divide_into_batches(image, num_batches):
+                image_batch = image_batch.to(self.device)
+                mu, _ = self.theta_encoder(image_batch)
+                thetas.append(mu.view(image_batch.shape[0], self.theta_dim).cpu())
+                foreground.append((image_batch > 1e-6).float().mean(dim=(1, 2, 3)).cpu())
+        return torch.cat(thetas, dim=0), torch.cat(foreground, dim=0)
+
     def harmonize(self, source_images, target_images, target_theta, target_eta, out_paths,
                   recon_orientation, norm_vals, header=None, num_batches=4, save_intermediate=False, intermediate_out_dir=None):
         if out_paths is not None:

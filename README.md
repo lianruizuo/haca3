@@ -179,6 +179,29 @@ be downloaded [here](https://iacl.ece.jhu.edu/~lianrui/haca3/harmonization_publi
 GPU memory. For reduced GPU memory consumption, source images maybe divided into smaller batches. 
 However, this may slightly increase the inference time.
 
+### 4.4 Encoding contrast (`theta`) only
+Sometimes you only want HACA3's contrast representation `theta` as a feature, without running the
+full harmonization pipeline. `theta` is a low-dimensional (default 2-D) code that captures image
+contrast, and can be used to study acquisition/scanner differences directly from images (see
+[Application #4](#5-go-further-with-harmonization)). The `haca3-encode` command runs only the
+`theta` encoder in inference mode (no decoding, no fusion):
+   ```bash
+   haca3-encode \
+   --in-path [PATH-TO-IMAGE-1] \
+   --in-path [PATH-TO-IMAGE-2, IF ENCODING MULTIPLE IMAGES] \
+   --harmonization-model [PRETRAINED-HACA3-MODEL] \
+   --out-dir [DIRECTORY-FOR-OUTPUT-CSVS]
+   ```
+This writes two CSV files into `--out-dir`:
+- `[prefix]_theta.csv`: per-slice `theta` values (with each slice's foreground fraction).
+- `[prefix]_theta_mean.csv`: one `theta` vector per input image, averaged over foreground slices.
+
+Options: `--prefix` sets the output file prefix (defaults to the first input file name);
+`--foreground-thresh` sets the minimum non-background fraction for a slice to count toward the
+per-volume mean (default `0.01`); `--no-bg-removal`, `--gpu-id`, and `--num-batches` behave as in
+`haca3-test`. The encoder uses the deterministic posterior mean of `theta`, so results are
+reproducible across runs.
+
 ## 5. Go further with harmonization 
 - ***Application #1: Identifying optimal operating contrast.*** With the ability of synthesizing arbitrary 
 contrasts of the same underlying anatomy, we use harmonization to identify the optimal operating contrast (OOC) of various
