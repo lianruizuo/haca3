@@ -44,6 +44,7 @@ setup(
         "console_scripts": [
             "haca3-train=haca3.train:main",
             "haca3-test=haca3.test:main",
+            "haca3-encode=haca3.encode:main",
         ]
     },
     install_requires=[
